@@ -12,7 +12,6 @@
     --border: #263552;
     --accent: #38bdf8;
     --primary: #2563eb;
-    --tg-blue: #2AABEE;
     --success: #10b981;
     --danger: #ef4444;
     --text: #f8fafc;
@@ -34,59 +33,18 @@
     border: 1px solid var(--border);
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   }
-  .auth-screen {
-    max-width: 420px;
-    margin: 40px auto;
-    text-align: center;
-  }
-  .tg-logo {
-    width: 68px;
-    height: 68px;
-    background: var(--tg-blue);
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-    margin-bottom: 14px;
-    box-shadow: 0 8px 20px rgba(42, 171, 238, 0.35);
-  }
   .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  .user-profile {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #2563eb, #38bdf8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 17px;
-    color: white;
-    overflow: hidden;
-  }
-  .avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .tg-id-badge {
-    font-size: 11px;
+  .dev-tag {
+    font-size: 12px;
     color: var(--accent);
     background: rgba(56,189,248,0.1);
-    padding: 4px 9px;
+    padding: 4px 10px;
     border-radius: 20px;
     border: 1px solid rgba(56,189,248,0.25);
-    font-family: monospace;
   }
   .stats {
     display: grid;
@@ -116,17 +74,12 @@
     font-size: 15px;
     cursor: pointer;
     margin-top: 8px;
-    transition: transform 0.08s;
-    text-decoration: none;
-    display: inline-block;
-    box-sizing: border-box;
-    text-align: center;
+    transition: transform 0.08s, opacity 0.2s;
   }
   .btn:active { transform: scale(0.97); }
   .btn-primary { background: var(--primary); color: white; }
-  .btn-tg { background: var(--tg-blue); color: white; }
   .btn-success { background: var(--success); color: #022c22; }
-  .btn-disabled { background: #334155; color: var(--muted); }
+  .btn-disabled { background: #334155; color: var(--muted); cursor: not-allowed; }
   .btn-tap {
     background: linear-gradient(145deg, #2563eb, #1e40af);
     color: white;
@@ -208,7 +161,11 @@
     margin: 12px 0;
     color: var(--accent);
   }
-  .small { font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .small {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
   .warn-banner {
     background: rgba(239,68,68,0.15);
     border: 1px solid var(--danger);
@@ -232,38 +189,33 @@
     width: 0%;
     transition: width 0.3s;
   }
+  #authScreen {
+    text-align: center;
+    padding: 30px 16px;
+  }
 </style>
 </head>
 <body>
 
-<!-- ЭКРАН РЕГИСТРАЦИИ / ВХОДА ЧЕРЕЗ TELEGRAM -->
-<div id="authScreen" class="auth-screen" style="display:none;">
-  <div class="card">
-    <div class="tg-logo">✈️</div>
-    <h2 style="margin:0 0 8px;">Вход через Telegram</h2>
-    <p class="small">Чтобы ваш баланс монет, прокачки и лицензионные ключи сохранялись за вашим аккаунтом, откройте приложение через официального бота или авторизуйтесь через Telegram.</p>
-    
-    <a href="https://t.me/dronpint_arex_pro_Shop_bot" target="_blank" class="btn btn-tg" style="margin-top:14px;">
-      🚀 Открыть в боте @dronpint_arex_pro_Shop_bot
-    </a>
-
-    <div id="tgWidgetContainer" style="margin-top:16px; display:flex; justify-content:center;"></div>
-    <p class="small" style="margin-top:14px;">Авторизация без паролей — используется ваш Telegram ID.</p>
-  </div>
+<!-- ЭКРАН ВХОДА ЧЕРЕЗ TELEGRAM -->
+<div id="authScreen" class="card" style="display:none;">
+  <h2 style="margin-top:0; color:var(--accent);">🔐 Вход через Telegram</h2>
+  <p class="small">Для доступа к магазину и кликеру TacticalGrid авторизуйтесь через ваш аккаунт Telegram.</p>
+  <div id="tgWidgetContainer" style="margin: 18px 0; display:flex; justify-content:center;"></div>
+  <a href="https://t.me/dronpint_arex_pro_Shop_bot" target="_blank" style="text-decoration:none;">
+    <button class="btn btn-primary">🤖 Открыть в Telegram-боте</button>
+  </a>
 </div>
 
 <!-- ОСНОВНОЕ ПРИЛОЖЕНИЕ -->
 <div id="appContainer" style="display:none;">
   <div class="card">
     <div class="header">
-      <div class="user-profile">
-        <div class="avatar" id="userAvatar">И</div>
-        <div>
-          <strong id="userName" style="font-size:15px;">Игрок</strong>
-          <div class="small" id="userHandle">@player</div>
-        </div>
+      <div>
+        <strong id="userName" style="font-size:16px;">Игрок</strong>
+        <div class="small" id="userHandle">@player</div>
       </div>
-      <span class="tg-id-badge" id="userTgId">ID: —</span>
+      <span class="dev-tag">TacticalGrid</span>
     </div>
     <div class="stats">
       <div class="stat-box">
@@ -277,7 +229,7 @@
     </div>
   </div>
 
-  <!-- МАГАЗИН -->
+  <!-- ВКЛАДКА МАГАЗИН -->
   <div id="tab-shop" class="tab active">
     <div class="card">
       <h3 style="margin:0 0 6px;">🎮 Полная версия игры TacticalGrid</h3>
@@ -296,7 +248,7 @@
     </div>
   </div>
 
-  <!-- МОНЕТЫ -->
+  <!-- ВКЛАДКА МОНЕТЫ -->
   <div id="tab-clicker" class="tab">
     <div class="card" style="text-align:center;">
       <button class="btn btn-tap" id="tapBtn">КЛИК<br><span style="font-size:14px; font-weight:normal;" id="tapInfo">+1 🪙 / -1 ⚡</span></button>
@@ -305,7 +257,7 @@
       
       <div class="progress-bg"><div class="progress-fill" id="goalBar"></div></div>
       <p style="margin:6px 0;"><strong id="goalText">0 / 100 000 🪙</strong> до бесплатного ключа</p>
-      <button class="btn btn-success" onclick="claimFreeKey()">🎁 Забрать ключ за 100 000 монет</button>
+      <button class="btn btn-success" id="freeKeyBtn" onclick="claimFreeKey()">🎁 Забрать ключ за 100 000 монет</button>
     </div>
 
     <div class="card">
@@ -335,7 +287,7 @@
     </div>
   </div>
 
-  <!-- КЛЮЧИ -->
+  <!-- ВКЛАДКА КЛЮЧИ -->
   <div id="tab-keys" class="tab">
     <div class="card">
       <h3 style="margin:0 0 10px;">🔐 Ваши лицензионные ключи</h3>
@@ -343,18 +295,18 @@
     </div>
   </div>
 
-  <!-- ПОМОЩЬ -->
+  <!-- ВКЛАДКА ПОМОЩЬ -->
   <div id="tab-help" class="tab">
     <div class="card">
       <h3 style="margin:0 0 10px;">ℹ Информация и поддержка</h3>
       <p class="small">1. Выберите товар во вкладке «Магазин» и оплатите на карту.</p>
-      <p class="small">2. Прикрепите скриншот чека — админ проверит его и выдаст ключ на ваш Telegram ID.</p>
+      <p class="small">2. Прикрепите скриншот чека — админ проверит его и выдаст ключ.</p>
       <p class="small">3. Либо накопите 100 000 монет в кликере и заберите ключ бесплатно.</p>
       <p class="small" style="margin-top:12px;">Разработчик: <strong>@eldar3275</strong><br>Бот магазина: <strong>@dronpint_arex_pro_Shop_bot</strong></p>
     </div>
   </div>
 
-  <!-- МОДАЛКА ОПЛАТЫ -->
+  <!-- МОДАЛЬНОЕ ОКНО ОПЛАТЫ -->
   <div class="modal" id="payModal">
     <div class="modal-content">
       <h3 style="margin-top:0;">Оплата заказа</h3>
@@ -378,79 +330,24 @@
 
 <script>
   const SECRET_SALT = "ELDAR_TG_2026_KEY";
-  const BOT_USERNAME = "dronpint_arex_pro_Shop_bot";
-  const USERS_DB_KEY = "tg_registered_users_db";
-
   let currentUser = null;
   let state = null;
 
-  // Колбэк для официального виджета входа Telegram в браузере
-  window.onTelegramAuth = function(user) {
-    initUserSession({
-      id: String(user.id),
-      first_name: user.first_name || 'Игрок',
-      username: user.username || '',
-      photo_url: user.photo_url || ''
-    });
-  };
-
-  function boot() {
-    const tg = window.Telegram?.WebApp;
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      tg.expand();
-      const u = tg.initDataUnsafe.user;
-      initUserSession({
-        id: String(u.id),
-        first_name: u.first_name || 'Игрок',
-        username: u.username || '',
-        photo_url: u.photo_url || ''
-      });
-      return;
-    }
-
-    const savedUser = JSON.parse(localStorage.getItem('tg_active_session') || 'null');
-    if (savedUser && savedUser.id) {
-      initUserSession(savedUser);
-      return;
-    }
-
-    // Показываем только экран входа через Telegram (без тестового режима)
-    document.getElementById('authScreen').style.display = 'block';
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = "https://telegram.org/js/telegram-widget.js?22";
-    script.setAttribute("data-telegram-login", BOT_USERNAME);
-    script.setAttribute("data-size", "large");
-    script.setAttribute("data-radius", "12");
-    script.setAttribute("data-onauth", "onTelegramAuth(user)");
-    script.setAttribute("data-request-access", "write");
-    document.getElementById('tgWidgetContainer').appendChild(script);
-  }
-
-  function initUserSession(tgUser) {
-    currentUser = tgUser;
-    localStorage.setItem('tg_active_session', JSON.stringify(tgUser));
-
+  function initAppWithUser(user) {
+    currentUser = user;
+    localStorage.setItem('tg_current_session', JSON.stringify(user));
     document.getElementById('authScreen').style.display = 'none';
     document.getElementById('appContainer').style.display = 'block';
 
-    document.getElementById('userName').innerText = tgUser.first_name;
-    document.getElementById('userHandle').innerText = tgUser.username ? '@' + tgUser.username : 'Без @username';
-    document.getElementById('userTgId').innerText = 'ID: ' + tgUser.id;
+    document.getElementById('userName').innerText = user.first_name || 'Игрок';
+    document.getElementById('userHandle').innerText = (user.username ? '@' + user.username : '') + ` (ID: ${user.id})`;
 
-    const avatarEl = document.getElementById('userAvatar');
-    if (tgUser.photo_url) {
-      avatarEl.innerHTML = `<img src="${tgUser.photo_url}" alt="avatar">`;
-    } else {
-      avatarEl.innerText = (tgUser.first_name || 'И').charAt(0).toUpperCase();
-    }
-
-    const db = JSON.parse(localStorage.getItem(USERS_DB_KEY) || '{}');
-    if (!db[tgUser.id]) {
-      db[tgUser.id] = {
-        id: tgUser.id,
-        first_name: tgUser.first_name,
-        username: tgUser.username || '',
+    const allUsers = JSON.parse(localStorage.getItem('tg_all_users_db') || '{}');
+    if (!allUsers[user.id]) {
+      allUsers[user.id] = {
+        id: user.id,
+        first_name: user.first_name || 'Игрок',
+        username: user.username || '',
         registeredAt: new Date().toLocaleString(),
         coins: 0,
         power: 100,
@@ -462,24 +359,66 @@
         keys: [],
         lastRegen: Date.now()
       };
-      localStorage.setItem(USERS_DB_KEY, JSON.stringify(db));
-    } else {
-      db[tgUser.id].first_name = tgUser.first_name;
-      db[tgUser.id].username = tgUser.username || '';
-      localStorage.setItem(USERS_DB_KEY, JSON.stringify(db));
+      localStorage.setItem('tg_all_users_db', JSON.stringify(allUsers));
+    }
+    state = allUsers[user.id];
+    updateUI();
+  }
+
+  window.onTelegramAuth = function(user) {
+    initAppWithUser(user);
+  };
+
+  (function bootstrap() {
+    const tg = window.Telegram?.WebApp;
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      tg.expand();
+      initAppWithUser(tg.initDataUnsafe.user);
+      return;
     }
 
-    state = db[tgUser.id];
+    const savedSession = localStorage.getItem('tg_current_session');
+    if (savedSession) {
+      try {
+        const parsed = JSON.parse(savedSession);
+        if (parsed && parsed.id) {
+          initAppWithUser(parsed);
+          return;
+        }
+      } catch (e) {}
+    }
+
+    document.getElementById('authScreen').style.display = 'block';
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = "https://telegram.org/js/telegram-widget.js?22";
+    script.setAttribute('data-telegram-login', 'dronpint_arex_pro_Shop_bot');
+    script.setAttribute('data-size', 'large');
+    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+    script.setAttribute('data-request-access', 'write');
+    document.getElementById('tgWidgetContainer').appendChild(script);
+  })();
+
+  function syncDB() {
+    if (!currentUser || !state) return;
+    const allUsers = JSON.parse(localStorage.getItem('tg_all_users_db') || '{}');
+    allUsers[currentUser.id] = state;
+    localStorage.setItem('tg_all_users_db', JSON.stringify(allUsers));
     updateUI();
   }
 
-  function saveState() {
-    if (!currentUser || !state) return;
-    const db = JSON.parse(localStorage.getItem(USERS_DB_KEY) || '{}');
-    db[currentUser.id] = state;
-    localStorage.setItem(USERS_DB_KEY, JSON.stringify(db));
-    updateUI();
+  function refreshFromDB() {
+    if (!currentUser) return;
+    const allUsers = JSON.parse(localStorage.getItem('tg_all_users_db') || '{}');
+    if (allUsers[currentUser.id]) {
+      state = allUsers[currentUser.id];
+      updateUI();
+    }
   }
+
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'tg_all_users_db') refreshFromDB();
+  });
 
   function updateUI() {
     if (!state) return;
@@ -510,11 +449,11 @@
         state.power = Math.min(state.maxPower, state.power + gained);
       }
       state.lastRegen = now;
-      saveState();
+      syncDB();
     }
   }, 10000);
 
-  // Защита от автокликера
+  // ЗАЩИТА ОТ АВТОКЛИКЕРА
   let lastTapTime = 0;
   let tapIntervals = [];
   let lockUntil = 0;
@@ -562,32 +501,36 @@
     } else {
       state.coins = Math.max(0, state.coins - 2);
     }
-    saveState();
+    syncDB();
   });
 
+  // ПРОКАЧКА +25 МАКС. СИЛЫ (БЕЗ ВОССТАНОВЛЕНИЯ ТЕКУЩЕЙ)
   function buyMaxPower() {
+    refreshFromDB();
     if (state.coins < state.powerCost) return alert('Недостаточно монет!');
     state.coins -= state.powerCost;
     state.maxPower += 25;
     state.powerLvl += 1;
     state.powerCost = Math.round(state.powerCost * 1.5);
-    saveState();
+    syncDB();
   }
 
   function buyClickPower() {
+    refreshFromDB();
     if (state.coins < state.clickCost) return alert('Недостаточно монет!');
     state.coins -= state.clickCost;
     state.clickPower += 1;
     state.clickCost = Math.round(state.clickCost * 1.8);
-    saveState();
+    syncDB();
   }
 
   function claimFreeKey() {
+    refreshFromDB();
     if (state.coins < 100000) return alert('Нужно накопить 100 000 монет!');
     state.coins -= 100000;
     const newKey = 'TG-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
     state.keys.push(newKey);
-    saveState();
+    syncDB();
     alert('Вы получили ключ: ' + newKey);
   }
 
@@ -601,28 +544,33 @@
     return Math.abs(hash).toString(36).toUpperCase();
   }
 
+  // ИСПРАВЛЕННАЯ АКТИВАЦИЯ КОДА (БЕЗ ЛИМИТА В ДЕНЬ, СРОК 1-2 ЧАСА)
   function redeemCode() {
-    const rawCode = document.getElementById('promoInput').value.trim();
+    refreshFromDB();
+    const rawCode = document.getElementById('promoInput').value.replace(/\s+/g, '');
     if (!rawCode) return alert('Введите код!');
 
     const now = Date.now();
-    const usedKey = 'tg_used_codes_' + currentUser.id;
-    let usedCodes = JSON.parse(localStorage.getItem(usedKey) || '[]');
+    let usedCodes = JSON.parse(localStorage.getItem('tg_used_codes_v3_' + currentUser.id) || '[]');
     if (usedCodes.includes(rawCode)) {
-      return alert('Этот код уже был активирован на вашем аккаунте!');
+      return alert('Вы уже активировали этот код ранее!');
     }
 
     try {
       const parts = rawCode.split('.');
-      if (parts.length !== 2 || !parts.startsWith('TG-')) throw new Error();
+      if (parts.length !== 2 || !parts[0].startsWith('TG-')) {
+        throw new Error('Format error');
+      }
 
-      const b64 = parts.slice(3);
-      const sig = parts;
-      if (signData(b64) !== sig) throw new Error();
+      const b64 = parts[0].slice(3);
+      const sig = parts[1].toUpperCase();
+      if (signData(b64) !== sig) {
+        throw new Error('Signature mismatch');
+      }
 
       const data = JSON.parse(atob(b64));
       if (!data.exp || now > data.exp) {
-        return alert('Срок действия этого кода истек! Коды действуют только 1–2 часа.');
+        return alert('Срок действия этого кода истек! Коды действуют 1–2 часа.');
       }
 
       if (data.t === 'c') {
@@ -637,9 +585,9 @@
       }
 
       usedCodes.push(rawCode);
-      localStorage.setItem(usedKey, JSON.stringify(usedCodes));
+      localStorage.setItem('tg_used_codes_v3_' + currentUser.id, JSON.stringify(usedCodes));
       document.getElementById('promoInput').value = '';
-      saveState();
+      syncDB();
 
     } catch (e) {
       alert('Неверный или поврежденный код!');
@@ -657,8 +605,8 @@
     alert('Номер карты скопирован!');
   }
   function confirmPayment() {
-    if (!document.getElementById('receiptFile').files) return alert('Прикрепите фото чека!');
-    alert(`Заявка от ID ${currentUser.id} отправлена администратору @eldar3275!`);
+    if (!document.getElementById('receiptFile').files.length) return alert('Прикрепите фото чека!');
+    alert('Заявка отправлена администратору @eldar3275!');
     closePay();
   }
   function switchTab(tabId, btn) {
@@ -667,8 +615,6 @@
     document.getElementById('tab-' + tabId).classList.add('active');
     btn.classList.add('active');
   }
-
-  boot();
 </script>
 </body>
 </html>
