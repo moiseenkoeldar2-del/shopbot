@@ -3,387 +3,406 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>TacticalGrid Shop — @eldar3275</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<title>TacticalGrid Shop — @dronpint_arex_pro_Shop_bot</title>
 <style>
   :root {
-    --bg: #0f1419;
-    --card: #1a222b;
-    --accent: #2ea6ff;
+    --bg: #0f172a;
+    --card: #1e293b;
+    --card2: #334155;
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --accent: #3b82f6;
     --green: #22c55e;
     --red: #ef4444;
     --gold: #f59e0b;
-    --text: #f3f4f6;
-    --muted: #9ca3af;
   }
-  * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  body { margin: 0; background: var(--bg); color: var(--text); padding: 14px 14px 82px; }
-  .header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 14px; border-radius: 14px; margin-bottom: 12px; }
-  .user-info h3 { margin: 0; font-size: 16px; }
-  .user-info span { font-size: 12px; color: var(--muted); }
-  .online-pill { background: rgba(34, 197, 94, 0.15); color: var(--green); padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
-  .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-  .tab { display: none; }
-  .tab.active { display: block; }
-
-  .card { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.06); }
-  .card h4 { margin: 0 0 6px; font-size: 16px; }
-  .card p { margin: 0 0 12px; font-size: 13px; color: var(--muted); line-height: 1.4; }
-  .price-row { display: flex; justify-content: space-between; align-items: center; }
-  .price { font-size: 18px; font-weight: 800; color: var(--accent); }
-  .btn { background: var(--accent); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; }
-  .btn:active { transform: scale(0.97); }
-  .btn-gold { background: var(--gold); color: #111; }
-  .btn-green { background: var(--green); color: #fff; }
-  .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
-
-  /* Clicker */
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-  .stat-box { background: var(--card); padding: 12px; border-radius: 12px; text-align: center; }
-  .stat-box .val { font-size: 20px; font-weight: 800; margin-top: 4px; }
-  .tap-wrap { text-align: center; margin: 16px 0; }
-  .tap-btn {
-    width: 170px; height: 170px; border-radius: 50%; border: 6px solid rgba(46,166,255,0.35);
-    background: radial-gradient(circle at 30% 30%, #38bdf8, #0284c7);
-    color: #fff; font-size: 22px; font-weight: 900; cursor: pointer;
-    box-shadow: 0 10px 30px rgba(2,132,199,0.45); transition: transform 0.08s;
-  }
-  .tap-btn.empty {
-    border-color: rgba(239,68,68,0.45);
-    background: radial-gradient(circle at 30% 30%, #f87171, #dc2626);
-    box-shadow: 0 10px 30px rgba(220,38,38,0.45);
-  }
-  .tap-btn:active { transform: scale(0.94); }
-  .progress-bg { background: #0b0f14; height: 12px; border-radius: 999px; overflow: hidden; margin: 8px 0; }
-  .progress-fill { background: linear-gradient(90deg, #f59e0b, #22c55e); height: 100%; width: 0%; transition: width 0.25s; }
-
-  .upg-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
-  .upg-item:last-child { border-bottom: none; }
-
-  input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: #0f1419; color: #fff; margin-bottom: 10px; font-size: 14px; }
-
-  /* Modal */
-  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 50; align-items: center; justify-content: center; padding: 16px; }
-  .modal.open { display: flex; }
-  .modal-box { background: var(--card); width: 100%; max-width: 400px; border-radius: 16px; padding: 18px; }
-  .card-num { background: #0f1419; padding: 12px; border-radius: 10px; font-family: monospace; font-size: 16px; text-align: center; letter-spacing: 1px; margin: 10px 0; border: 1px dashed var(--accent); cursor: pointer; }
-
-  /* Bottom Nav */
-  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #141b22; display: flex; border-top: 1px solid rgba(255,255,255,0.08); }
-  .nav button { flex: 1; background: none; border: none; color: var(--muted); padding: 10px 4px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  body { background: var(--bg); color: var(--text); padding: 14px 14px 82px; }
+  .header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 14px; border-radius: 14px; margin-bottom: 12px; border: 1px solid #334155; }
+  .user-info { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
+  .online-pill { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+  .stats-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+  .stat-box { background: var(--card); padding: 10px 12px; border-radius: 12px; border: 1px solid #334155; }
+  .stat-label { font-size: 11px; color: var(--muted); }
+  .stat-val { font-size: 17px; font-weight: 700; margin-top: 2px; }
+  .section { display: none; }
+  .section.active { display: block; }
+  .card { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; border: 1px solid #334155; }
+  .card h3 { font-size: 16px; margin-bottom: 6px; }
+  .card p { font-size: 13px; color: var(--muted); line-height: 1.4; margin-bottom: 10px; }
+  .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .price { font-size: 18px; font-weight: 800; color: var(--green); }
+  .btn { background: var(--accent); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; }
+  .btn:active { transform: scale(0.98); }
+  .btn-green { background: var(--green); color: #052e16; }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-gold { background: var(--gold); color: #1c1917; }
+  .btn-full { width: 100%; margin-top: 8px; }
+  .clicker-area { text-align: center; padding: 18px 10px; }
+  .tap-btn { width: 150px; height: 150px; border-radius: 50%; border: 4px solid var(--gold); background: radial-gradient(circle, #f59e0b 0%, #b45309 100%); color: #fff; font-size: 20px; font-weight: 800; cursor: pointer; box-shadow: 0 0 25px rgba(245,158,11,0.35); transition: transform 0.08s; }
+  .tap-btn.empty { border-color: var(--red); background: radial-gradient(circle, #ef4444 0%, #991b1b 100%); box-shadow: 0 0 25px rgba(239,68,68,0.4); }
+  .tap-btn:active { transform: scale(0.93); }
+  .progress-wrap { background: #0f172a; border-radius: 999px; height: 12px; overflow: hidden; margin: 10px 0 6px; border: 1px solid #334155; }
+  .progress-fill { background: linear-gradient(90deg, var(--gold), var(--green)); height: 100%; width: 0%; transition: width 0.2s; }
+  .input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 14px; margin-top: 6px; }
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px 4px; }
+  .nav button { background: none; border: none; color: var(--muted); font-size: 11px; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
   .nav button.active { color: var(--accent); }
-  .dev-tag { text-align: center; font-size: 12px; color: var(--muted); margin-top: 12px; }
-  .dev-tag a { color: var(--accent); text-decoration: none; }
+  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 50; align-items: center; justify-content: center; padding: 16px; }
+  .modal.open { display: flex; }
+  .modal-box { background: var(--card); border-radius: 16px; padding: 16px; width: 100%; max-width: 400px; border: 1px solid #475569; }
+  .card-num { background: #0f172a; padding: 10px; border-radius: 10px; font-family: monospace; font-size: 16px; text-align: center; margin: 8px 0; border: 1px dashed var(--accent); cursor: pointer; }
+  .key-item { background: #0f172a; padding: 10px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; font-family: monospace; }
+  .toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); background: #0f172a; border: 1px solid var(--accent); color: #fff; padding: 8px 14px; border-radius: 10px; font-size: 13px; z-index: 99; display: none; }
 </style>
 </head>
 <body>
 
+<div id="toast" class="toast"></div>
+
 <div class="header">
   <div class="user-info">
-    <h3 id="uName">Игрок TacticalGrid</h3>
-    <span id="uHandle">@player • Ур. силы: <b id="lvlBadge">1</b></span>
+    <div class="avatar" id="uAvatar">И</div>
+    <div>
+      <div style="font-weight:700;font-size:14px;" id="uName">Игрок</div>
+      <div style="font-size:11px;color:var(--muted);" id="uUser">@player</div>
+    </div>
   </div>
-  <div class="online-pill"><span class="dot"></span> Онлайн: <span id="onlineCount">42</span></div>
+  <div class="online-pill">● Онлайн: <span id="onlineCount">42</span></div>
 </div>
 
-<!-- TAB 1: SHOP -->
-<div id="tab-shop" class="tab active">
+<div class="stats-bar">
+  <div class="stat-box">
+    <div class="stat-label">Баланс монет</div>
+    <div class="stat-val" style="color:var(--gold);"><span id="coinsVal">0</span> 🪙</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-label">Сила (+1 / 5 мин)</div>
+    <div class="stat-val" style="color:var(--green);"><span id="energyVal">100</span> / <span id="maxEnergyVal">100</span> ⚡</div>
+    <div style="font-size:10px;color:var(--muted);" id="regenTimer">Полный запас</div>
+  </div>
+</div>
+
+<!-- ВИТРИНА -->
+<div id="sec-shop" class="section active">
   <div class="card">
-    <h4>🗺 Полная версия игры TacticalGrid</h4>
-    <p>Лицензионный ключ доступа к тактической карте, режиму против ИИ, песочнице и всем бригадам.</p>
+    <h3>🎮 Полная версия игры TacticalGrid</h3>
+    <p>Доступ ко всем картам, режимам против ИИ и песочнице. Разраб: @eldar3275</p>
     <div class="price-row">
-      <span class="price">20 грн</span>
+      <div class="price">20 грн</div>
       <button class="btn" onclick="openPay('Полная версия игры TacticalGrid', 20)">Купить</button>
     </div>
   </div>
 
   <div class="card">
-    <h4>🔑 Дополнительный ключ</h4>
-    <p>Второй резервный ключ активации для другого устройства или подарка другу.</p>
+    <h3>🔑 Дополнительный ключ</h3>
+    <p>Второй лицензионный ключ для друга или второго устройства.</p>
     <div class="price-row">
-      <span class="price">25 грн</span>
+      <div class="price">25 грн</div>
       <button class="btn" onclick="openPay('Дополнительный ключ', 25)">Купить</button>
     </div>
   </div>
 
   <div class="card">
-    <h4>👑 VIP-пакет + исходник .aia</h4>
-    <p>Максимальный доступ, VIP-статус в боте, полные исходники проекта и приоритетная поддержка.</p>
+    <h3>👑 VIP-пакет + исходник .aia</h3>
+    <p>Полная игра, VIP-статус и исходный файл проекта для MIT App Inventor.</p>
     <div class="price-row">
-      <span class="price">100 грн</span>
+      <div class="price">100 грн</div>
       <button class="btn btn-gold" onclick="openPay('VIP-пакет + исходник .aia', 100)">Купить VIP</button>
     </div>
   </div>
-  <div class="dev-tag">Разраб: <a href="https://t.me/eldar3275" target="_blank">@eldar3275</a></div>
 </div>
 
-<!-- TAB 2: CLICKER & COINS -->
-<div id="tab-coins" class="tab">
-  <div class="stats-grid">
-    <div class="stat-box">
-      <div style="font-size:12px;color:var(--muted)">Монеты</div>
-      <div class="val" style="color:var(--gold)" id="coinsVal">0 🪙</div>
+<!-- КЛИКЕР И ПРОМОКОДЫ -->
+<div id="sec-clicker" class="section">
+  <div class="card clicker-area">
+    <button id="tapBtn" class="tap-btn" onclick="handleTap()">КЛИК<br><span style="font-size:13px;" id="tapHint">+1 🪙 / -1 ⚡</span></button>
+    <p style="margin-top:10px;font-size:12px;" id="warnText">Если сила 0 — клик отнимает 2 монеты!</p>
+    <div class="progress-wrap"><div id="keyProgress" class="progress-fill"></div></div>
+    <div style="font-size:12px;color:var(--muted);"><span id="progText">0</span> / 100 000 🪙 до бесплатного ключа</div>
+    <button id="claimKeyBtn" class="btn btn-green btn-full" style="display:none;" onclick="claimFreeKey()">🎁 Забрать ключ за 100 000 монет</button>
+  </div>
+
+  <div class="card">
+    <h3>⚡ Прокачки</h3>
+    <div class="price-row">
+      <div><b>+25 макс. силы</b><div style="font-size:11px;color:var(--muted);">Уровень: <span id="lvlCap">1</span></div></div>
+      <button class="btn" onclick="buyUpgrade('cap')"><span id="costCap">500</span> 🪙</button>
     </div>
-    <div class="stat-box">
-      <div style="font-size:12px;color:var(--muted)">Сила (+1 / 5 мин)</div>
-      <div class="val" id="energyVal">100 / 100 ⚡</div>
-      <div style="font-size:11px;color:var(--muted)" id="regenTimer">Полная сила</div>
+    <div class="price-row" style="margin-top:10px;">
+      <div><b>+1 монета за клик</b><div style="font-size:11px;color:var(--muted);">Сила клика: <span id="clickPowerVal">1</span></div></div>
+      <button class="btn" onclick="buyUpgrade('power')"><span id="costPower">1000</span> 🪙</button>
     </div>
   </div>
 
   <div class="card">
-    <div style="display:flex;justify-content:space-between;font-size:13px;">
-      <span>До бесплатного ключа игры:</span>
-      <b><span id="goalText">0</span> / 100 000 🪙</b>
-    </div>
-    <div class="progress-bg"><div class="progress-fill" id="goalBar"></div></div>
-    <button class="btn btn-green" id="claimKeyBtn" style="width:100%;margin-top:6px;display:none;" onclick="exchangeKey()">🎁 Обменять 100 000 монет на ключ!</button>
-  </div>
-
-  <div class="tap-wrap">
-    <button class="tap-btn" id="tapBtn" onclick="doTap()">КЛИК<br><span style="font-size:13px;font-weight:500" id="tapHint">+1 🪙 / -1 ⚡</span></button>
-    <div style="font-size:12px;color:var(--muted);margin-top:8px;">Если сила = 0, каждый клик отнимает <b>2 монеты</b>!</div>
-  </div>
-
-  <div class="card">
-    <h4>⚡ Прокачки</h4>
-    <div class="upg-item">
-      <div>
-        <b>Макс. запас силы (+25)</b><br>
-        <span style="font-size:12px;color:var(--muted)">Текущий макс: <span id="maxEnergyInfo">100</span></span>
-      </div>
-      <button class="btn btn-outline" onclick="buyUpgrade('maxEnergy')" id="btnUpgEnergy">150 🪙</button>
-    </div>
-    <div class="upg-item">
-      <div>
-        <b>Мощность клика (+1 🪙)</b><br>
-        <span style="font-size:12px;color:var(--muted)">За клик: +<span id="tapPowerInfo">1</span> 🪙</span>
-      </div>
-      <button class="btn btn-outline" onclick="buyUpgrade('tapPower')" id="btnUpgPower">250 🪙</button>
-    </div>
-  </div>
-
-  <div class="card">
-    <h4>🎟 Код от админа (@eldar3275)</h4>
-    <p>Введи код выдачи наград, полученный от администратора в боте.</p>
-    <input type="text" id="promoInput" placeholder="Например: GIFT-50000-MAX">
-    <button class="btn" style="width:100%" onclick="redeemAdminCode()">Активировать награду</button>
+    <h3>🎟 Промокод / Код из админки</h3>
+    <p>Введите промокод (START1000, POWER50, CLICK5, TACTICAL50K, ELDARVIP) или код начисления/списания от админа.</p>
+    <input type="text" id="promoInput" class="input" placeholder="Введите код...">
+    <button class="btn btn-full" onclick="applyPromo()">Активировать код</button>
   </div>
 </div>
 
-<!-- TAB 3: KEYS -->
-<div id="tab-keys" class="tab">
+<!-- МОИ КЛЮЧИ -->
+<div id="sec-keys" class="section">
   <div class="card">
-    <h4>🔑 Мои ключи и покупки</h4>
-    <div id="keysList"><p>Пока нет активированных ключей. Купите игру в магазине или накопите 100 000 монет!</p></div>
+    <h3>🔐 Ваши лицензионные ключи</h3>
+    <div id="keysList"></div>
   </div>
 </div>
 
-<!-- PAY MODAL -->
-<div class="modal" id="payModal">
+<!-- ПОМОЩЬ -->
+<div id="sec-help" class="section">
+  <div class="card">
+    <h3>ℹ️ Информация и поддержка</h3>
+    <p>1. Выберите товар во вкладке «Магазин» и оплатите на карту.<br>
+       2. Прикрепите скриншот чека — админ проверит его и выдаст ключ.<br>
+       3. Либо накопите 100 000 монет в кликере и заберите ключ бесплатно.</p>
+    <p>Разработчик: <b>@eldar3275</b><br>Бот магазина: <b>@dronpint_arex_pro_Shop_bot</b></p>
+  </div>
+</div>
+
+<!-- МОДАЛКА ОПЛАТЫ -->
+<div id="payModal" class="modal">
   <div class="modal-box">
-    <h4 style="margin:0 0 6px" id="payTitle">Оплата</h4>
-    <p style="font-size:13px;color:var(--muted);margin:0">Переведите <b id="payAmount" style="color:#fff">20 грн</b> на карту (нажмите, чтобы скопировать):</p>
+    <h3 id="payTitle">Оплата заказа</h3>
+    <p style="font-size:13px;color:var(--muted);margin-top:4px;">Переведите ровно <b style="color:#fff;" id="payAmount">20 грн</b> на карту (нажмите чтобы скопировать):</p>
     <div class="card-num" onclick="copyCard()">4441 1144 3394 8724 📋</div>
-    <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Прикрепите фото/скриншот оплаты:</label>
-    <input type="file" id="receiptFile" accept="image/*">
-    <div style="display:flex;gap:8px;margin-top:6px;">
-      <button class="btn btn-outline" style="flex:1" onclick="closePay()">Отмена</button>
-      <button class="btn btn-green" style="flex:1" onclick="submitPayment()">Я оплатил</button>
-    </div>
+    <label style="font-size:12px;color:var(--muted);display:block;margin-top:8px;">Прикрепить фото оплаты (чек):</label>
+    <input type="file" id="receiptFile" accept="image/*" class="input">
+    <button class="btn btn-green btn-full" onclick="submitPayment()">✅ Я оплатил</button>
+    <button class="btn btn-red btn-full" onclick="closePay()">Отмена</button>
   </div>
 </div>
 
 <div class="nav">
-  <button class="active" onclick="switchTab('shop', this)">🛒 Магазин</button>
-  <button onclick="switchTab('coins', this)">🪙 Монеты</button>
-  <button onclick="switchTab('keys', this)">🔑 Ключи</button>
+  <button class="active" onclick="switchTab('shop', this)">🛒<span>Магазин</span></button>
+  <button onclick="switchTab('clicker', this)">🪙<span>Монеты</span></button>
+  <button onclick="switchTab('keys', this)">🔑<span>Ключи</span></button>
+  <button onclick="switchTab('help', this)">❓<span>Помощь</span></button>
 </div>
 
 <script>
-const tg = window.Telegram ? window.Telegram.WebApp : null;
-if (tg) { tg.expand(); tg.ready(); }
-
-const REGEN_MS = 5 * 60 * 1000; // 5 минут = +1 сила
-let state = JSON.parse(localStorage.getItem('tg_mini_state_v7') || 'null') || {
+const REGEN_MS = 5 * 60 * 1000;
+let state = JSON.parse(localStorage.getItem('tg_shop_state_v9') || 'null') || {
   coins: 0,
   energy: 100,
   maxEnergy: 100,
-  tapPower: 1,
-  lastTick: Date.now(),
-  keys: [],
-  usedCodes: []
+  clickPower: 1,
+  lvlCap: 1,
+  lastRegen: Date.now(),
+  usedPromos: [],
+  keys: []
 };
 
-let currentItem = { name: '', price: 0 };
+let currentOrder = { title: '', amount: 0 };
 
-function save() {
-  localStorage.setItem('tg_mini_state_v7', JSON.stringify(state));
+function saveState() {
+  localStorage.setItem('tg_shop_state_v9', JSON.stringify(state));
 }
 
-function tickRegen() {
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2500);
+}
+
+function syncRegen() {
   const now = Date.now();
   if (state.energy < state.maxEnergy) {
-    const elapsed = now - state.lastTick;
-    if (elapsed >= REGEN_MS) {
-      const gained = Math.floor(elapsed / REGEN_MS);
+    const passed = now - state.lastRegen;
+    if (passed >= REGEN_MS) {
+      const gained = Math.floor(passed / REGEN_MS);
       state.energy = Math.min(state.maxEnergy, state.energy + gained);
-      state.lastTick = state.energy >= state.maxEnergy ? now : state.lastTick + gained * REGEN_MS;
-      save();
+      state.lastRegen = state.energy >= state.maxEnergy ? now : state.lastRegen + gained * REGEN_MS;
+      saveState();
     }
+    const left = Math.max(0, REGEN_MS - (now - state.lastRegen));
+    const m = Math.floor(left / 60000);
+    const s = Math.floor((left % 60000) / 1000);
+    document.getElementById('regenTimer').textContent = `+1 ⚡ через ${m}:${s < 10 ? '0'+s : s}`;
   } else {
-    state.lastTick = now;
+    state.lastRegen = now;
+    document.getElementById('regenTimer').textContent = 'Полный запас';
   }
-  render();
 }
 
 function render() {
-  if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-    const u = tg.initDataUnsafe.user;
-    document.getElementById('uName').textContent = u.first_name || 'Игрок';
-    document.getElementById('uHandle').innerHTML = (u.username ? '@' + u.username : 'ID ' + u.id) + ' • Сила клика: <b>' + state.tapPower + '</b>';
-  }
-  document.getElementById('coinsVal').textContent = state.coins.toLocaleString('ru-RU') + ' 🪙';
-  document.getElementById('energyVal').textContent = `${state.energy} / ${state.maxEnergy} ⚡`;
-  document.getElementById('maxEnergyInfo').textContent = state.maxEnergy;
-  document.getElementById('tapPowerInfo').textContent = state.tapPower;
+  syncRegen();
+  document.getElementById('coinsVal').textContent = state.coins.toLocaleString('ru-RU');
+  document.getElementById('energyVal').textContent = state.energy;
+  document.getElementById('maxEnergyVal').textContent = state.maxEnergy;
+  document.getElementById('lvlCap').textContent = state.lvlCap;
+  document.getElementById('clickPowerVal').textContent = state.clickPower;
+  document.getElementById('costCap').textContent = (state.lvlCap * 500).toLocaleString('ru-RU');
+  document.getElementById('costPower').textContent = (state.clickPower * 1000).toLocaleString('ru-RU');
 
-  const tapBtn = document.getElementById('tapBtn');
-  const tapHint = document.getElementById('tapHint');
+  const btn = document.getElementById('tapBtn');
   if (state.energy > 0) {
-    tapBtn.classList.remove('empty');
-    tapHint.textContent = `+${state.tapPower} 🪙 / -1 ⚡`;
+    btn.classList.remove('empty');
+    document.getElementById('tapHint').textContent = `+${state.clickPower} 🪙 / -1 ⚡`;
   } else {
-    tapBtn.classList.add('empty');
-    tapHint.textContent = `-2 🪙 (нет силы!)`;
-  }
-
-  if (state.energy < state.maxEnergy) {
-    const left = Math.max(0, REGEN_MS - (Date.now() - state.lastTick));
-    const m = Math.floor(left / 60000);
-    const s = Math.floor((left % 60000) / 1000);
-    document.getElementById('regenTimer').textContent = `+1 ⚡ через ${m}:${s < 10 ? '0' : ''}${s}`;
-  } else {
-    document.getElementById('regenTimer').textContent = 'Максимум силы';
+    btn.classList.add('empty');
+    document.getElementById('tapHint').textContent = `-2 🪙 (нет силы!)`;
   }
 
   const pct = Math.min(100, (state.coins / 100000) * 100);
-  document.getElementById('goalText').textContent = state.coins.toLocaleString('ru-RU');
-  document.getElementById('goalBar').style.width = pct + '%';
+  document.getElementById('keyProgress').style.width = pct + '%';
+  document.getElementById('progText').textContent = Math.min(state.coins, 100000).toLocaleString('ru-RU');
   document.getElementById('claimKeyBtn').style.display = state.coins >= 100000 ? 'block' : 'none';
 
-  const keysList = document.getElementById('keysList');
-  if (state.keys.length > 0) {
-    keysList.innerHTML = state.keys.map(k => `<div style="background:#0f1419;padding:10px;border-radius:10px;margin-bottom:8px;font-family:monospace;"><b>${k.code}</b><br><span style="font-size:11px;color:var(--muted)">${k.source}</span></div>`).join('');
+  const kl = document.getElementById('keysList');
+  if (!state.keys.length) {
+    kl.innerHTML = '<p style="font-size:13px;color:var(--muted);">У вас пока нет активных ключей.</p>';
+  } else {
+    kl.innerHTML = state.keys.map(k => `<div class="key-item"><span>${k}</span><button class="btn" style="padding:4px 8px;font-size:12px;" onclick="navigator.clipboard.writeText('${k}');toast('Ключ скопирован!')">Копия</button></div>`).join('');
   }
 }
 
-function doTap() {
+function handleTap() {
   if (state.energy > 0) {
-    if (state.energy === state.maxEnergy) state.lastTick = Date.now();
+    if (state.energy === state.maxEnergy) state.lastRegen = Date.now();
     state.energy -= 1;
-    state.coins += state.tapPower;
+    state.coins += state.clickPower;
   } else {
     state.coins = Math.max(0, state.coins - 2);
+    toast('Сила закончилась! Списано -2 монеты');
   }
-  save();
+  saveState();
   render();
 }
 
 function buyUpgrade(type) {
-  if (type === 'maxEnergy') {
-    if (state.coins < 150) return alert('Недостаточно монет (нужно 150 🪙)');
-    state.coins -= 150;
+  if (type === 'cap') {
+    const cost = state.lvlCap * 500;
+    if (state.coins < cost) return toast('Недостаточно монет!');
+    state.coins -= cost;
+    state.lvlCap += 1;
     state.maxEnergy += 25;
-    state.energy = state.maxEnergy;
-  } else if (type === 'tapPower') {
-    if (state.coins < 250) return alert('Недостаточно монет (нужно 250 🪙)');
-    state.coins -= 250;
-    state.tapPower += 1;
+    state.energy += 25;
+    toast('Запас силы увеличен на +25!');
+  } else if (type === 'power') {
+    const cost = state.clickPower * 1000;
+    if (state.coins < cost) return toast('Недостаточно монет!');
+    state.coins -= cost;
+    state.clickPower += 1;
+    toast('Мощность клика +1!');
   }
-  save();
+  saveState();
   render();
 }
 
-function exchangeKey() {
+function genKey() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const part = () => Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
+  return `TG-${part()}-${part()}-${part()}`;
+}
+
+function claimFreeKey() {
   if (state.coins < 100000) return;
   state.coins -= 100000;
-  const code = 'TG-' + Math.random().toString(36).substring(2,6).toUpperCase() + '-' + Math.random().toString(36).substring(2,6).toUpperCase() + '-100K';
-  state.keys.unshift({ code, source: 'Обмен за 100 000 монет' });
-  save();
+  const k = genKey();
+  state.keys.push(k);
+  saveState();
   render();
-  alert('Поздравляем! Ваш ключ: ' + code);
+  toast('Ключ получен! Смотрите во вкладке «Ключи»');
 }
 
-function redeemAdminCode() {
-  const raw = document.getElementById('promoInput').value.trim().toUpperCase();
-  if (!raw) return;
-  if (state.usedCodes.includes(raw)) return alert('Этот код уже активирован!');
-  // Формат от админки: GIFT-<COINS>-<ENERGY>-<POWER>-<VIP>
-  const parts = raw.split('-');
-  if (parts[0] === 'GIFT' && parts.length >= 4) {
-    const addCoins = parseInt(parts[1], 10) || 0;
-    const addEnergy = parseInt(parts[2], 10) || 0;
-    const addPower = parseInt(parts[3], 10) || 0;
-    state.coins += addCoins;
-    if (addEnergy > 0) { state.maxEnergy += addEnergy; state.energy = state.maxEnergy; }
-    if (addPower > 0) { state.tapPower += addPower; }
-    if (parts[4] === 'KEY') {
-      const code = 'TG-' + Math.random().toString(36).substring(2,6).toUpperCase() + '-VIP-3275';
-      state.keys.unshift({ code, source: 'Подарок от @eldar3275' });
-    }
-    state.usedCodes.push(raw);
+function applyPromo() {
+  const raw = document.getElementById('promoInput').value.trim();
+  if (!raw) return toast('Введите код');
+  const up = raw.toUpperCase();
+
+  const promos = {
+    'START1000': { coins: 1000, msg: '+1 000 монет!' },
+    'POWER50': { maxEnergy: 50, msg: '+50 макс. силы!' },
+    'CLICK5': { clickPower: 5, msg: '+5 к силе клика!' },
+    'TACTICAL50K': { coins: 50000, msg: '+50 000 монет!' },
+    'ELDARVIP': { coins: 100000, clickPower: 10, msg: '+100 000 монет и +10 клик!' }
+  };
+
+  if (promos[up]) {
+    if (state.usedPromos.includes(up)) return toast('Этот промокод уже активирован!');
+    state.usedPromos.push(up);
+    if (promos[up].coins) state.coins += promos[up].coins;
+    if (promos[up].maxEnergy) { state.maxEnergy += promos[up].maxEnergy; state.energy += promos[up].maxEnergy; }
+    if (promos[up].clickPower) state.clickPower += promos[up].clickPower;
+    saveState(); render();
     document.getElementById('promoInput').value = '';
-    save();
-    render();
-    alert(`Награда от @eldar3275 зачислена!
-+${addCoins} монет, +${addEnergy} макс. силы, +${addPower} к клику.`);
-  } else {
-    alert('Неверный формат кода. Попросите код в админ-панели @eldar3275.');
+    return toast('Активировано: ' + promos[up].msg);
   }
+
+  if (up.startsWith('ADM-')) {
+    try {
+      const payload = JSON.parse(atob(raw.slice(4)));
+      if (state.usedPromos.includes(raw)) return toast('Код уже использован');
+      state.usedPromos.push(raw);
+      if (payload.coins) state.coins = Math.max(0, state.coins + Number(payload.coins));
+      if (payload.energy) { state.maxEnergy += Number(payload.energy); state.energy += Number(payload.energy); }
+      if (payload.power) state.clickPower += Number(payload.power);
+      if (payload.addKey) state.keys.push(payload.addKey);
+      if (payload.revokeKey) state.keys = state.keys.filter(k => k !== payload.revokeKey);
+      saveState(); render();
+      document.getElementById('promoInput').value = '';
+      return toast('Синхронизация с админкой выполнена!');
+    } catch(e) {}
+  }
+
+  toast('Неверный промокод');
 }
 
-function switchTab(name, btn) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+function switchTab(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
   document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + name).classList.add('active');
-  btn.classList.add('active');
+  el.classList.add('active');
 }
 
-function openPay(name, price) {
-  currentItem = { name, price };
-  document.getElementById('payTitle').textContent = name;
-  document.getElementById('payAmount').textContent = price + ' грн';
+function openPay(title, amount) {
+  currentOrder = { title, amount };
+  document.getElementById('payTitle').textContent = title;
+  document.getElementById('payAmount').textContent = amount + ' грн';
   document.getElementById('payModal').classList.add('open');
 }
-function closePay() { document.getElementById('payModal').classList.remove('open'); }
+
+function closePay() {
+  document.getElementById('payModal').classList.remove('open');
+}
+
 function copyCard() {
   navigator.clipboard.writeText('4441114433948724');
-  alert('Номер карты 4441 1144 3394 8724 скопирован!');
+  toast('Номер карты скопирован!');
 }
+
 function submitPayment() {
   const file = document.getElementById('receiptFile').files[0];
-  if (!file) return alert('Пожалуйста, прикрепите фото или скриншот оплаты!');
-  const payload = JSON.stringify({
-    action: 'payment_receipt',
-    item: currentItem.name,
-    price: currentItem.price,
-    card: '4441 1144 3394 8724'
-  });
-  if (tg) {
-    tg.sendData(payload);
-  }
-  alert('Чек отправлен администратору! После проверки бот пришлёт ключ в личные сообщения.');
-  closePay();
+  if (!file) return toast('Прикрепите фото чека оплаты!');
+  const reader = new FileReader();
+  reader.onload = () => {
+    const orders = JSON.parse(localStorage.getItem('tg_pending_orders') || '[]');
+    orders.unshift({
+      id: Date.now(),
+      user: document.getElementById('uUser').textContent,
+      title: currentOrder.title,
+      amount: currentOrder.amount,
+      photo: reader.result,
+      status: 'pending',
+      time: new Date().toLocaleTimeString()
+    });
+    localStorage.setItem('tg_pending_orders', JSON.stringify(orders));
+    closePay();
+    toast('Чек отправлен на проверку администратору!');
+  };
+  reader.readAsDataURL(file);
 }
 
 setInterval(() => {
-  tickRegen();
+  render();
   document.getElementById('onlineCount').textContent = 38 + Math.floor(Math.random() * 12);
 }, 1000);
-tickRegen();
+render();
 </script>
 </body>
 </html>
