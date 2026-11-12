@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -7,73 +8,31 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
-    --bg: #0b1120;
-    --card: #151f32;
-    --border: #263552;
-    --accent: #38bdf8;
-    --primary: #2563eb;
-    --success: #10b981;
-    --danger: #ef4444;
-    --text: #f8fafc;
-    --muted: #94a3b8;
+    --bg: #0b1120; --card: #151f32; --border: #263552;
+    --accent: #38bdf8; --primary: #2563eb; --success: #10b981;
+    --danger: #ef4444; --text: #f8fafc; --muted: #94a3b8;
   }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    margin: 0;
-    padding: 14px 14px 85px;
+    background: var(--bg); color: var(--text); margin: 0; padding: 14px 14px 85px;
     -webkit-tap-highlight-color: transparent;
   }
   .card {
-    background: var(--card);
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 14px;
-    border: 1px solid var(--border);
+    background: var(--card); border-radius: 16px; padding: 16px;
+    margin-bottom: 14px; border: 1px solid var(--border);
     box-shadow: 0 4px 12px rgba(0,0,0,0.2);
   }
-  .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+  .header { display: flex; justify-content: space-between; align-items: center; }
   .dev-tag {
-    font-size: 12px;
-    color: var(--accent);
-    background: rgba(56,189,248,0.1);
-    padding: 4px 10px;
-    border-radius: 20px;
-    border: 1px solid rgba(56,189,248,0.25);
+    font-size: 12px; color: var(--accent); background: rgba(56,189,248,0.1);
+    padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(56,189,248,0.25);
   }
-  .stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-top: 14px;
-  }
-  .stat-box {
-    background: var(--bg);
-    padding: 12px;
-    border-radius: 12px;
-    text-align: center;
-    border: 1px solid #1e293b;
-  }
-  .stat-val {
-    font-size: 19px;
-    font-weight: 800;
-    color: var(--accent);
-    margin-top: 4px;
-  }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .stat-box { background: var(--bg); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid #1e293b; }
+  .stat-val { font-size: 18px; font-weight: 800; color: var(--accent); margin-top: 4px; }
   .btn {
-    width: 100%;
-    padding: 13px;
-    border: none;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 15px;
-    cursor: pointer;
-    margin-top: 8px;
+    width: 100%; padding: 13px; border: none; border-radius: 12px;
+    font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px;
     transition: transform 0.08s, opacity 0.2s;
   }
   .btn:active { transform: scale(0.97); }
@@ -81,139 +40,74 @@
   .btn-success { background: var(--success); color: #022c22; }
   .btn-disabled { background: #334155; color: var(--muted); cursor: not-allowed; }
   .btn-tap {
-    background: linear-gradient(145deg, #2563eb, #1e40af);
-    color: white;
-    font-size: 24px;
-    padding: 32px 20px;
-    border-radius: 20px;
-    box-shadow: 0 8px 25px rgba(37,99,235,0.35);
-    user-select: none;
-    touch-action: manipulation;
+    background: linear-gradient(145deg, #2563eb, #1e40af); color: white;
+    font-size: 24px; padding: 32px 20px; border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(37,99,235,0.35); user-select: none; touch-action: manipulation;
   }
   .btn-tap:active { transform: scale(0.94); }
   input {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: white;
-    margin-top: 8px;
-    font-size: 15px;
-    outline: none;
+    width: 100%; box-sizing: border-box; padding: 12px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--bg); color: white;
+    margin-top: 8px; font-size: 15px; outline: none;
   }
   input:focus { border-color: var(--accent); }
   .nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(21,31,50,0.95);
-    backdrop-filter: blur(10px);
-    display: flex;
-    border-top: 1px solid var(--border);
-    z-index: 50;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(21,31,50,0.95); backdrop-filter: blur(10px);
+    display: flex; border-top: 1px solid var(--border); z-index: 50;
   }
-  .nav button {
-    flex: 1;
-    background: none;
-    border: none;
-    color: var(--muted);
-    padding: 12px 4px;
-    font-size: 12px;
-    cursor: pointer;
-  }
-  .nav button.active {
-    color: var(--accent);
-    font-weight: 700;
-  }
+  .nav button { flex: 1; background: none; border: none; color: var(--muted); padding: 12px 4px; font-size: 12px; cursor: pointer; }
+  .nav button.active { color: var(--accent); font-weight: 700; }
   .tab { display: none; }
   .tab.active { display: block; }
   .modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    justify-content: center;
-    align-items: center;
-    padding: 16px;
-    z-index: 100;
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+    justify-content: center; align-items: center; padding: 16px; z-index: 100;
   }
   .modal-content {
-    background: var(--card);
-    padding: 20px;
-    border-radius: 18px;
-    width: 100%;
-    max-width: 400px;
-    border: 1px solid var(--border);
+    background: var(--card); padding: 20px; border-radius: 18px;
+    width: 100%; max-width: 400px; border: 1px solid var(--border);
   }
   .card-num {
-    background: var(--bg);
-    padding: 13px;
-    border-radius: 10px;
-    text-align: center;
-    font-family: monospace;
-    font-size: 17px;
-    letter-spacing: 1px;
-    cursor: pointer;
-    border: 1px dashed var(--accent);
-    margin: 12px 0;
-    color: var(--accent);
+    background: var(--bg); padding: 13px; border-radius: 10px; text-align: center;
+    font-family: monospace; font-size: 16px; letter-spacing: 1px; cursor: pointer;
+    border: 1px dashed var(--accent); margin: 10px 0; color: var(--accent);
   }
-  .small {
-    font-size: 12px;
-    color: var(--muted);
-    line-height: 1.4;
-  }
+  .small { font-size: 12px; color: var(--muted); line-height: 1.4; }
   .warn-banner {
-    background: rgba(239,68,68,0.15);
-    border: 1px solid var(--danger);
-    color: #fca5a5;
-    padding: 8px 12px;
-    border-radius: 8px;
-    font-size: 12px;
-    margin-top: 10px;
-    display: none;
+    background: rgba(239,68,68,0.15); border: 1px solid var(--danger); color: #fca5a5;
+    padding: 8px 12px; border-radius: 8px; font-size: 12px; margin-top: 10px; display: none;
   }
-  .progress-bg {
-    background: var(--bg);
-    height: 8px;
-    border-radius: 99px;
-    overflow: hidden;
-    margin: 10px 0;
+  .progress-bg { background: var(--bg); height: 8px; border-radius: 99px; overflow: hidden; margin: 10px 0; }
+  .progress-fill { background: var(--success); height: 100%; width: 0%; transition: width 0.3s; }
+  .auth-screen {
+    min-height: 85vh; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; text-align: center;
   }
-  .progress-fill {
-    background: var(--success);
-    height: 100%;
-    width: 0%;
-    transition: width 0.3s;
+  .tg-link-btn {
+    display: inline-block; background: #24A1DE; color: white; text-decoration: none;
+    padding: 14px 24px; border-radius: 12px; font-weight: 700; font-size: 15px; margin-top: 14px;
   }
-  #authScreen {
-    text-align: center;
-    padding: 30px 16px;
-  }
+  .order-item { background: var(--bg); padding: 10px; border-radius: 10px; margin-top: 8px; border: 1px solid var(--border); }
 </style>
 </head>
 <body>
 
-<!-- ЭКРАН ВХОДА ЧЕРЕЗ TELEGRAM -->
-<div id="authScreen" class="card" style="display:none;">
-  <h2 style="margin-top:0; color:var(--accent);">🔐 Вход через Telegram</h2>
-  <p class="small">Для доступа к магазину и кликеру TacticalGrid авторизуйтесь через ваш аккаунт Telegram.</p>
-  <div id="tgWidgetContainer" style="margin: 18px 0; display:flex; justify-content:center;"></div>
-  <a href="https://t.me/dronpint_arex_pro_Shop_bot" target="_blank" style="text-decoration:none;">
-    <button class="btn btn-primary">🤖 Открыть в Telegram-боте</button>
-  </a>
+<div id="authScreen" class="auth-screen" style="display:none;">
+  <div class="card" style="max-width:380px; width:100%;">
+    <h2 style="margin-top:0; color:var(--accent);">TacticalGrid Shop</h2>
+    <p class="small">Для входа в магазин и сохранения прогресса авторизуйтесь через Telegram.</p>
+    <div id="tgWidgetContainer" style="margin: 18px 0; display:flex; justify-content:center;"></div>
+    <a href="https://t.me/dronpint_arex_pro_Shop_bot" target="_blank" class="tg-link-btn">📲 Открыть в @dronpint_arex_pro_Shop_bot</a>
+  </div>
 </div>
 
-<!-- ОСНОВНОЕ ПРИЛОЖЕНИЕ -->
-<div id="appContainer" style="display:none;">
+<div id="appScreen" style="display:none;">
   <div class="card">
     <div class="header">
       <div>
         <strong id="userName" style="font-size:16px;">Игрок</strong>
-        <div class="small" id="userHandle">@player</div>
+        <div class="small" id="userHandle">ID: —</div>
       </div>
       <span class="dev-tag">TacticalGrid</span>
     </div>
@@ -229,35 +123,18 @@
     </div>
   </div>
 
-  <!-- ВКЛАДКА МАГАЗИН -->
   <div id="tab-shop" class="tab active">
-    <div class="card">
-      <h3 style="margin:0 0 6px;">🎮 Полная версия игры TacticalGrid</h3>
-      <p class="small">Доступ ко всем картам, режимам против ИИ и песочнице. Разраб: @eldar3275</p>
-      <button class="btn btn-primary" onclick="openPay('Полная версия игры TacticalGrid', 20)">Купить — 20 грн</button>
-    </div>
-    <div class="card">
-      <h3 style="margin:0 0 6px;">🔑 Дополнительный ключ</h3>
-      <p class="small">Второй лицензионный ключ для друга или второго устройства.</p>
-      <button class="btn btn-primary" onclick="openPay('Дополнительный ключ', 25)">Купить — 25 грн</button>
-    </div>
-    <div class="card">
-      <h3 style="margin:0 0 6px;">👑 VIP-пакет + исходник .aia</h3>
-      <p class="small">Полная игра, VIP-статус и исходный файл проекта для MIT App Inventor.</p>
-      <button class="btn btn-primary" onclick="openPay('VIP-пакет + исходник .aia', 100)">Купить VIP — 100 грн</button>
-    </div>
+    <div id="shopProductsContainer"></div>
   </div>
 
-  <!-- ВКЛАДКА МОНЕТЫ -->
   <div id="tab-clicker" class="tab">
     <div class="card" style="text-align:center;">
       <button class="btn btn-tap" id="tapBtn">КЛИК<br><span style="font-size:14px; font-weight:normal;" id="tapInfo">+1 🪙 / -1 ⚡</span></button>
-      <div class="warn-banner" id="antiCheatWarn">⚠️ Обнаружен автокликер! Сделайте паузу 2 секунды.</div>
+      <div class="warn-banner" id="antiCheatWarn">⚠️ Обнаружен автокликер! Подождите 2 секунды.</div>
       <p class="small" style="margin-top:10px;">Если сила 0 — клик отнимает 2 монеты!</p>
-      
       <div class="progress-bg"><div class="progress-fill" id="goalBar"></div></div>
       <p style="margin:6px 0;"><strong id="goalText">0 / 100 000 🪙</strong> до бесплатного ключа</p>
-      <button class="btn btn-success" id="freeKeyBtn" onclick="claimFreeKey()">🎁 Забрать ключ за 100 000 монет</button>
+      <button class="btn btn-success" id="freeKeyBtn" onclick="claimFreeKey()">🎁 Забрать ключ за <span id="goalBtnCost">100 000</span> монет</button>
     </div>
 
     <div class="card">
@@ -281,38 +158,39 @@
 
     <div class="card">
       <h3 style="margin:0 0 6px;">🎟 Код от администратора</h3>
-      <p class="small">Введите одноразовый код, выданный владельцем. Количество активаций не ограничено.</p>
+      <p class="small">Введите код от владельца (без суточных ограничений).</p>
       <input type="text" id="promoInput" placeholder="Вставьте код сюда..." autocomplete="off">
       <button class="btn btn-primary" onclick="redeemCode()">Активировать код</button>
     </div>
   </div>
 
-  <!-- ВКЛАДКА КЛЮЧИ -->
   <div id="tab-keys" class="tab">
     <div class="card">
       <h3 style="margin:0 0 10px;">🔐 Ваши лицензионные ключи</h3>
       <div id="keysList" class="small">У вас пока нет активированных ключей.</div>
     </div>
+    <div class="card">
+      <h3 style="margin:0 0 10px;">🧾 Ваши заявки на оплату</h3>
+      <div id="myOrdersList" class="small">Заявок пока нет.</div>
+    </div>
   </div>
 
-  <!-- ВКЛАДКА ПОМОЩЬ -->
   <div id="tab-help" class="tab">
     <div class="card">
       <h3 style="margin:0 0 10px;">ℹ Информация и поддержка</h3>
       <p class="small">1. Выберите товар во вкладке «Магазин» и оплатите на карту.</p>
       <p class="small">2. Прикрепите скриншот чека — админ проверит его и выдаст ключ.</p>
-      <p class="small">3. Либо накопите 100 000 монет в кликере и заберите ключ бесплатно.</p>
+      <p class="small">3. Либо накопите монеты в кликере и заберите ключ бесплатно.</p>
       <p class="small" style="margin-top:12px;">Разработчик: <strong>@eldar3275</strong><br>Бот магазина: <strong>@dronpint_arex_pro_Shop_bot</strong></p>
     </div>
   </div>
 
-  <!-- МОДАЛЬНОЕ ОКНО ОПЛАТЫ -->
   <div class="modal" id="payModal">
     <div class="modal-content">
       <h3 style="margin-top:0;">Оплата заказа</h3>
       <p class="small" id="payItemTitle">Товар</p>
-      <p style="font-size:14px;">Переведите ровно <strong id="payAmount" style="color:var(--accent);">20 грн</strong> на карту (нажмите чтобы скопировать):</p>
-      <div class="card-num" onclick="copyCard()">4441 1144 3394 8724 📋</div>
+      <p style="font-size:14px;">Переведите ровно <strong id="payAmount" style="color:var(--accent);">20 грн</strong> на карту:</p>
+      <div class="card-num" onclick="copyCard()"><span id="cardNumDisplay">4441 1144 3394 8724</span> 📋</div>
       <label class="small">Прикрепить фото оплаты (чек):</label>
       <input type="file" id="receiptFile" accept="image/*">
       <button class="btn btn-success" onclick="confirmPayment()">✅ Я оплатил</button>
@@ -330,103 +208,150 @@
 
 <script>
   const SECRET_SALT = "ELDAR_TG_2026_KEY";
+  const BOT_USERNAME = "dronpint_arex_pro_Shop_bot";
   let currentUser = null;
-  let state = null;
+  let currentOrderItem = null;
 
-  function initAppWithUser(user) {
-    currentUser = user;
-    localStorage.setItem('tg_current_session', JSON.stringify(user));
-    document.getElementById('authScreen').style.display = 'none';
-    document.getElementById('appContainer').style.display = 'block';
+  function getSettings() {
+    const def = {
+      cardNumber: "4441 1144 3394 8724",
+      freeKeyGoal: 100000,
+      basePowerCost: 500,
+      baseClickCost: 1000,
+      products: [
+        { id: "p1", title: "🎮 Полная версия игры TacticalGrid", desc: "Доступ ко всем картам, режимам против ИИ и песочнице. Разраб: @eldar3275", price: "20 грн", btnText: "Купить — 20 грн" },
+        { id: "p2", title: "🔑 Дополнительный ключ", desc: "Второй лицензионный ключ для друга или второго устройства.", price: "25 грн", btnText: "Купить — 25 грн" },
+        { id: "p3", title: "👑 VIP-пакет + исходник .aia", desc: "Полная игра, VIP-статус и исходный файл проекта для MIT App Inventor.", price: "100 грн", btnText: "Купить VIP — 100 грн" }
+      ]
+    };
+    const saved = JSON.parse(localStorage.getItem('tg_shop_settings') || 'null');
+    return saved ? { ...def, ...saved } : def;
+  }
 
-    document.getElementById('userName').innerText = user.first_name || 'Игрок';
-    document.getElementById('userHandle').innerText = (user.username ? '@' + user.username : '') + ` (ID: ${user.id})`;
+  function getPlayersDB() {
+    return JSON.parse(localStorage.getItem('tg_players_db') || '{}');
+  }
 
-    const allUsers = JSON.parse(localStorage.getItem('tg_all_users_db') || '{}');
-    if (!allUsers[user.id]) {
-      allUsers[user.id] = {
-        id: user.id,
-        first_name: user.first_name || 'Игрок',
-        username: user.username || '',
+  function savePlayersDB(db) {
+    localStorage.setItem('tg_players_db', JSON.stringify(db));
+  }
+
+  function getOrdersDB() {
+    return JSON.parse(localStorage.getItem('tg_orders_db') || '[]');
+  }
+
+  function saveOrdersDB(orders) {
+    localStorage.setItem('tg_orders_db', JSON.stringify(orders));
+  }
+
+  function initAuth() {
+    const tg = window.Telegram?.WebApp;
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      tg.expand();
+      const u = tg.initDataUnsafe.user;
+      loginWithTgUser({
+        id: String(u.id),
+        first_name: u.first_name || "Игрок",
+        username: u.username ? "@" + u.username : "без юзернейма"
+      });
+      return;
+    }
+
+    const savedSession = JSON.parse(localStorage.getItem('tg_current_session') || 'null');
+    if (savedSession && savedSession.id) {
+      loginWithTgUser(savedSession);
+      return;
+    }
+
+    document.getElementById('authScreen').style.display = 'flex';
+    const script = document.createElement('script');
+    script.src = "https://telegram.org/js/telegram-widget.js?22";
+    script.setAttribute("data-telegram-login", BOT_USERNAME);
+    script.setAttribute("data-size", "large");
+    script.setAttribute("data-radius", "12");
+    script.setAttribute("data-onauth", "onTelegramAuth(user)");
+    script.setAttribute("data-request-access", "write");
+    document.getElementById('tgWidgetContainer').appendChild(script);
+  }
+
+  window.onTelegramAuth = function(user) {
+    loginWithTgUser({
+      id: String(user.id),
+      first_name: user.first_name || "Игрок",
+      username: user.username ? "@" + user.username : "без юзернейма"
+    });
+  };
+
+  function loginWithTgUser(userObj) {
+    currentUser = userObj;
+    localStorage.setItem('tg_current_session', JSON.stringify(userObj));
+
+    const settings = getSettings();
+    const db = getPlayersDB();
+    if (!db[currentUser.id]) {
+      db[currentUser.id] = {
+        id: currentUser.id,
+        name: currentUser.first_name,
+        username: currentUser.username,
         registeredAt: new Date().toLocaleString(),
         coins: 0,
         power: 100,
         maxPower: 100,
         powerLvl: 1,
-        powerCost: 500,
+        powerCost: Number(settings.basePowerCost) || 500,
         clickPower: 1,
-        clickCost: 1000,
+        clickCost: Number(settings.baseClickCost) || 1000,
         keys: [],
         lastRegen: Date.now()
       };
-      localStorage.setItem('tg_all_users_db', JSON.stringify(allUsers));
+      savePlayersDB(db);
     }
-    state = allUsers[user.id];
+
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('appScreen').style.display = 'block';
+    document.getElementById('userName').innerText = currentUser.first_name;
+    document.getElementById('userHandle').innerText = `${currentUser.username} (ID: ${currentUser.id})`;
+    renderShop();
     updateUI();
   }
 
-  window.onTelegramAuth = function(user) {
-    initAppWithUser(user);
-  };
+  function renderShop() {
+    const settings = getSettings();
+    document.getElementById('cardNumDisplay').innerText = settings.cardNumber;
+    const container = document.getElementById('shopProductsContainer');
+    container.innerHTML = settings.products.map(p => `
+      <div class="card">
+        <h3 style="margin:0 0 6px;">${p.title}</h3>
+        <p class="small">${p.desc}</p>
+        <button class="btn btn-primary" onclick="openPay('${p.title.replace(/'/g, "\'")}', '${p.price.replace(/'/g, "\'")}')">${p.btnText}</button>
+      </div>
+    `).join('');
+  }
 
-  (function bootstrap() {
-    const tg = window.Telegram?.WebApp;
-    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      tg.expand();
-      initAppWithUser(tg.initDataUnsafe.user);
-      return;
-    }
+  function getUserState() {
+    const db = getPlayersDB();
+    return db[currentUser.id];
+  }
 
-    const savedSession = localStorage.getItem('tg_current_session');
-    if (savedSession) {
-      try {
-        const parsed = JSON.parse(savedSession);
-        if (parsed && parsed.id) {
-          initAppWithUser(parsed);
-          return;
-        }
-      } catch (e) {}
-    }
-
-    document.getElementById('authScreen').style.display = 'block';
-    const script = document.createElement('script');
-    script.async = true;
-    script.src = "https://telegram.org/js/telegram-widget.js?22";
-    script.setAttribute('data-telegram-login', 'dronpint_arex_pro_Shop_bot');
-    script.setAttribute('data-size', 'large');
-    script.setAttribute('data-onauth', 'onTelegramAuth(user)');
-    script.setAttribute('data-request-access', 'write');
-    document.getElementById('tgWidgetContainer').appendChild(script);
-  })();
-
-  function syncDB() {
-    if (!currentUser || !state) return;
-    const allUsers = JSON.parse(localStorage.getItem('tg_all_users_db') || '{}');
-    allUsers[currentUser.id] = state;
-    localStorage.setItem('tg_all_users_db', JSON.stringify(allUsers));
+  function saveUserState(state) {
+    const db = getPlayersDB();
+    db[currentUser.id] = state;
+    savePlayersDB(db);
     updateUI();
   }
-
-  function refreshFromDB() {
-    if (!currentUser) return;
-    const allUsers = JSON.parse(localStorage.getItem('tg_all_users_db') || '{}');
-    if (allUsers[currentUser.id]) {
-      state = allUsers[currentUser.id];
-      updateUI();
-    }
-  }
-
-  window.addEventListener('storage', (e) => {
-    if (e.key === 'tg_all_users_db') refreshFromDB();
-  });
 
   function updateUI() {
-    if (!state) return;
+    if (!currentUser) return;
+    const state = getUserState();
+    const settings = getSettings();
+    const goal = Number(settings.freeKeyGoal) || 100000;
+
     document.getElementById('coinsDisplay').innerText = state.coins.toLocaleString() + ' 🪙';
     document.getElementById('powerDisplay').innerText = `${state.power} / ${state.maxPower} ⚡`;
     document.getElementById('tapInfo').innerText = `+${state.clickPower} 🪙 / -1 ⚡`;
-    document.getElementById('goalText').innerText = `${state.coins.toLocaleString()} / 100 000 🪙`;
-    document.getElementById('goalBar').style.width = Math.min(100, (state.coins / 100000) * 100) + '%';
+    document.getElementById('goalText').innerText = `${state.coins.toLocaleString()} / ${goal.toLocaleString()} 🪙`;
+    document.getElementById('goalBtnCost').innerText = goal.toLocaleString();
+    document.getElementById('goalBar').style.width = Math.min(100, (state.coins / goal) * 100) + '%';
     document.getElementById('powerLvl').innerText = state.powerLvl;
     document.getElementById('powerCost').innerText = state.powerCost.toLocaleString();
     document.getElementById('clickLvl').innerText = state.clickPower;
@@ -438,10 +363,24 @@
     } else {
       keysDiv.innerHTML = state.keys.map(k => `<div class="card-num" onclick="navigator.clipboard.writeText('${k}');alert('Ключ скопирован!')">${k} 📋</div>`).join('');
     }
+
+    const myOrders = getOrdersDB().filter(o => o.userId === currentUser.id);
+    const ordersDiv = document.getElementById('myOrdersList');
+    if (myOrders.length === 0) {
+      ordersDiv.innerHTML = 'Заявок пока нет.';
+    } else {
+      ordersDiv.innerHTML = myOrders.map(o => `
+        <div class="order-item">
+          <div><strong>${o.product}</strong> — ${o.price}</div>
+          <div class="small">Статус: ${o.status === 'approved' ? '✅ Одобрено (ключ выдан)' : o.status === 'rejected' ? '❌ Отклонено' : '⏳ На проверке у админа'}</div>
+        </div>
+      `).join('');
+    }
   }
 
   setInterval(() => {
-    if (!state) return;
+    if (!currentUser) return;
+    const state = getUserState();
     const now = Date.now();
     const gained = Math.floor((now - state.lastRegen) / (5 * 60 * 1000));
     if (gained > 0) {
@@ -449,19 +388,24 @@
         state.power = Math.min(state.maxPower, state.power + gained);
       }
       state.lastRegen = now;
-      syncDB();
+      saveUserState(state);
     }
-  }, 10000);
+  }, 5000);
 
-  // ЗАЩИТА ОТ АВТОКЛИКЕРА
+  window.addEventListener('storage', () => {
+    if (currentUser) {
+      renderShop();
+      updateUI();
+    }
+  });
+
   let lastTapTime = 0;
   let tapIntervals = [];
   let lockUntil = 0;
   const MIN_TAP_MS = 105;
 
   document.getElementById('tapBtn').addEventListener('pointerdown', function(e) {
-    if (!e.isTrusted || !state) return;
-
+    if (!e.isTrusted || !currentUser) return;
     const now = Date.now();
     const warnEl = document.getElementById('antiCheatWarn');
 
@@ -495,42 +439,43 @@
     warnEl.style.display = 'none';
     lastTapTime = now;
 
+    const state = getUserState();
     if (state.power > 0) {
       state.power -= 1;
       state.coins += state.clickPower;
     } else {
       state.coins = Math.max(0, state.coins - 2);
     }
-    syncDB();
+    saveUserState(state);
   });
 
-  // ПРОКАЧКА +25 МАКС. СИЛЫ (БЕЗ ВОССТАНОВЛЕНИЯ ТЕКУЩЕЙ)
   function buyMaxPower() {
-    refreshFromDB();
+    const state = getUserState();
     if (state.coins < state.powerCost) return alert('Недостаточно монет!');
     state.coins -= state.powerCost;
     state.maxPower += 25;
     state.powerLvl += 1;
     state.powerCost = Math.round(state.powerCost * 1.5);
-    syncDB();
+    saveUserState(state);
   }
 
   function buyClickPower() {
-    refreshFromDB();
+    const state = getUserState();
     if (state.coins < state.clickCost) return alert('Недостаточно монет!');
     state.coins -= state.clickCost;
     state.clickPower += 1;
     state.clickCost = Math.round(state.clickCost * 1.8);
-    syncDB();
+    saveUserState(state);
   }
 
   function claimFreeKey() {
-    refreshFromDB();
-    if (state.coins < 100000) return alert('Нужно накопить 100 000 монет!');
-    state.coins -= 100000;
+    const state = getUserState();
+    const goal = Number(getSettings().freeKeyGoal) || 100000;
+    if (state.coins < goal) return alert(`Нужно накопить ${goal.toLocaleString()} монет!`);
+    state.coins -= goal;
     const newKey = 'TG-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
     state.keys.push(newKey);
-    syncDB();
+    saveUserState(state);
     alert('Вы получили ключ: ' + newKey);
   }
 
@@ -544,77 +489,113 @@
     return Math.abs(hash).toString(36).toUpperCase();
   }
 
-  // ИСПРАВЛЕННАЯ АКТИВАЦИЯ КОДА (БЕЗ ЛИМИТА В ДЕНЬ, СРОК 1-2 ЧАСА)
   function redeemCode() {
-    refreshFromDB();
     const rawCode = document.getElementById('promoInput').value.replace(/\s+/g, '');
     if (!rawCode) return alert('Введите код!');
 
-    const now = Date.now();
-    let usedCodes = JSON.parse(localStorage.getItem('tg_used_codes_v3_' + currentUser.id) || '[]');
+    let usedCodes = JSON.parse(localStorage.getItem('tg_used_codes_' + currentUser.id) || '[]');
     if (usedCodes.includes(rawCode)) {
-      return alert('Вы уже активировали этот код ранее!');
+      return alert('Вы уже активировали этот код!');
     }
 
     try {
       const parts = rawCode.split('.');
-      if (parts.length !== 2 || !parts[0].startsWith('TG-')) {
-        throw new Error('Format error');
-      }
+      if (parts.length !== 2 || !parts[0].startsWith('TG-')) throw new Error('Format');
 
       const b64 = parts[0].slice(3);
       const sig = parts[1].toUpperCase();
-      if (signData(b64) !== sig) {
-        throw new Error('Signature mismatch');
-      }
+      if (signData(b64) !== sig) throw new Error('Signature');
 
       const data = JSON.parse(atob(b64));
-      if (!data.exp || now > data.exp) {
-        return alert('Срок действия этого кода истек! Коды действуют 1–2 часа.');
+      if (!data.exp || Date.now() > data.exp) {
+        return alert('Срок действия этого кода истек!');
       }
 
+      const state = getUserState();
+      const val = Number(data.v);
+
       if (data.t === 'c') {
-        state.coins = Math.max(0, state.coins + Number(data.v));
-        alert(data.v >= 0 ? `Баланс пополнен на +${data.v} монет!` : `Списано ${Math.abs(data.v)} монет.`);
+        state.coins = Math.max(0, state.coins + val);
+        alert(val >= 0 ? `Начислено +${val.toLocaleString()} монет!` : `Списано ${Math.abs(val).toLocaleString()} монет.`);
+      } else if (data.t === 'e') {
+        state.power = Math.max(0, state.power + val);
+        alert(val >= 0 ? `Начислено +${val} энергии (силы)!` : `Списано ${Math.abs(val)} энергии.`);
+      } else if (data.t === 'me') {
+        state.maxPower = Math.max(25, state.maxPower + val);
+        alert(`Максимальный запас энергии изменен на +${val}!`);
+      } else if (data.t === 'cp') {
+        state.clickPower = Math.max(1, state.clickPower + val);
+        alert(`Сила клика увеличена на +${val}!`);
       } else if (data.t === 'k') {
         state.keys.push(data.v);
         alert(`Выдан новый ключ: ${data.v}`);
       } else if (data.t === 'rk') {
         state.keys = [];
-        alert('Ваш лицензионный ключ был отозван администратором.');
+        alert('Лицензионные ключи отозваны администратором.');
       }
 
       usedCodes.push(rawCode);
-      localStorage.setItem('tg_used_codes_v3_' + currentUser.id, JSON.stringify(usedCodes));
+      localStorage.setItem('tg_used_codes_' + currentUser.id, JSON.stringify(usedCodes));
       document.getElementById('promoInput').value = '';
-      syncDB();
-
+      saveUserState(state);
     } catch (e) {
       alert('Неверный или поврежденный код!');
     }
   }
 
   function openPay(title, price) {
+    currentOrderItem = { title, price };
     document.getElementById('payItemTitle').innerText = title;
-    document.getElementById('payAmount').innerText = price + ' грн';
+    document.getElementById('payAmount').innerText = price;
+    document.getElementById('receiptFile').value = '';
     document.getElementById('payModal').style.display = 'flex';
   }
-  function closePay() { document.getElementById('payModal').style.display = 'none'; }
+
+  function closePay() {
+    document.getElementById('payModal').style.display = 'none';
+  }
+
   function copyCard() {
-    navigator.clipboard.writeText('4441114433948724');
+    const card = getSettings().cardNumber.replace(/\s+/g, '');
+    navigator.clipboard.writeText(card);
     alert('Номер карты скопирован!');
   }
+
   function confirmPayment() {
-    if (!document.getElementById('receiptFile').files.length) return alert('Прикрепите фото чека!');
-    alert('Заявка отправлена администратору @eldar3275!');
-    closePay();
+    const fileInput = document.getElementById('receiptFile');
+    if (!fileInput.files || !fileInput.files[0]) {
+      return alert('Прикрепите фото чека!');
+    }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const orders = getOrdersDB();
+      orders.unshift({
+        id: "ORD-" + Date.now(),
+        userId: currentUser.id,
+        userName: currentUser.first_name,
+        username: currentUser.username,
+        product: currentOrderItem.title,
+        price: currentOrderItem.price,
+        receiptImg: e.target.result,
+        status: 'pending',
+        date: new Date().toLocaleString()
+      });
+      saveOrdersDB(orders);
+      alert('Чек отправлен администратору @eldar3275! Ожидайте проверки во вкладке «Ключи».');
+      closePay();
+      updateUI();
+    };
+    reader.readAsDataURL(fileInput.files[0]);
   }
+
   function switchTab(tabId, btn) {
     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
     document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-' + tabId).classList.add('active');
     btn.classList.add('active');
   }
+
+  initAuth();
 </script>
 </body>
 </html>
