@@ -4,405 +4,671 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TacticalGrid Shop — @dronpint_arex_pro_Shop_bot</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
-    --bg: #0f172a;
-    --card: #1e293b;
-    --card2: #334155;
+    --bg: #0b1120;
+    --card: #151f32;
+    --border: #263552;
+    --accent: #38bdf8;
+    --primary: #2563eb;
+    --tg-blue: #2AABEE;
+    --success: #10b981;
+    --danger: #ef4444;
     --text: #f8fafc;
     --muted: #94a3b8;
-    --accent: #3b82f6;
-    --green: #22c55e;
-    --red: #ef4444;
-    --gold: #f59e0b;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-  body { background: var(--bg); color: var(--text); padding: 14px 14px 82px; }
-  .header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 14px; border-radius: 14px; margin-bottom: 12px; border: 1px solid #334155; }
-  .user-info { display: flex; align-items: center; gap: 10px; }
-  .avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; }
-  .online-pill { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
-  .stats-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-  .stat-box { background: var(--card); padding: 10px 12px; border-radius: 12px; border: 1px solid #334155; }
-  .stat-label { font-size: 11px; color: var(--muted); }
-  .stat-val { font-size: 17px; font-weight: 700; margin-top: 2px; }
-  .section { display: none; }
-  .section.active { display: block; }
-  .card { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; border: 1px solid #334155; }
-  .card h3 { font-size: 16px; margin-bottom: 6px; }
-  .card p { font-size: 13px; color: var(--muted); line-height: 1.4; margin-bottom: 10px; }
-  .price-row { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
-  .price { font-size: 18px; font-weight: 800; color: var(--green); }
-  .btn { background: var(--accent); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; }
-  .btn:active { transform: scale(0.98); }
-  .btn-green { background: var(--green); color: #052e16; }
-  .btn-red { background: var(--red); color: #fff; }
-  .btn-gold { background: var(--gold); color: #1c1917; }
-  .btn-full { width: 100%; margin-top: 8px; }
-  .clicker-area { text-align: center; padding: 18px 10px; }
-  .tap-btn { width: 150px; height: 150px; border-radius: 50%; border: 4px solid var(--gold); background: radial-gradient(circle, #f59e0b 0%, #b45309 100%); color: #fff; font-size: 20px; font-weight: 800; cursor: pointer; box-shadow: 0 0 25px rgba(245,158,11,0.35); transition: transform 0.08s; }
-  .tap-btn.empty { border-color: var(--red); background: radial-gradient(circle, #ef4444 0%, #991b1b 100%); box-shadow: 0 0 25px rgba(239,68,68,0.4); }
-  .tap-btn:active { transform: scale(0.93); }
-  .progress-wrap { background: #0f172a; border-radius: 999px; height: 12px; overflow: hidden; margin: 10px 0 6px; border: 1px solid #334155; }
-  .progress-fill { background: linear-gradient(90deg, var(--gold), var(--green)); height: 100%; width: 0%; transition: width 0.2s; }
-  .input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 14px; margin-top: 6px; }
-  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #1e293b; border-top: 1px solid #334155; display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px 4px; }
-  .nav button { background: none; border: none; color: var(--muted); font-size: 11px; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
-  .nav button.active { color: var(--accent); }
-  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 50; align-items: center; justify-content: center; padding: 16px; }
-  .modal.open { display: flex; }
-  .modal-box { background: var(--card); border-radius: 16px; padding: 16px; width: 100%; max-width: 400px; border: 1px solid #475569; }
-  .card-num { background: #0f172a; padding: 10px; border-radius: 10px; font-family: monospace; font-size: 16px; text-align: center; margin: 8px 0; border: 1px dashed var(--accent); cursor: pointer; }
-  .key-item { background: #0f172a; padding: 10px; border-radius: 10px; margin-bottom: 8px; border: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; font-family: monospace; }
-  .toast { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); background: #0f172a; border: 1px solid var(--accent); color: #fff; padding: 8px 14px; border-radius: 10px; font-size: 13px; z-index: 99; display: none; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 14px 14px 85px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 14px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+  .auth-screen {
+    max-width: 420px;
+    margin: 40px auto;
+    text-align: center;
+  }
+  .tg-logo {
+    width: 68px;
+    height: 68px;
+    background: var(--tg-blue);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin-bottom: 14px;
+    box-shadow: 0 8px 20px rgba(42, 171, 238, 0.35);
+  }
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .user-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb, #38bdf8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 17px;
+    color: white;
+    overflow: hidden;
+  }
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .tg-id-badge {
+    font-size: 11px;
+    color: var(--accent);
+    background: rgba(56,189,248,0.1);
+    padding: 4px 9px;
+    border-radius: 20px;
+    border: 1px solid rgba(56,189,248,0.25);
+    font-family: monospace;
+  }
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .stat-box {
+    background: var(--bg);
+    padding: 12px;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #1e293b;
+  }
+  .stat-val {
+    font-size: 19px;
+    font-weight: 800;
+    color: var(--accent);
+    margin-top: 4px;
+  }
+  .btn {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: transform 0.08s;
+    text-decoration: none;
+    display: inline-block;
+    box-sizing: border-box;
+    text-align: center;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-tg { background: var(--tg-blue); color: white; }
+  .btn-success { background: var(--success); color: #022c22; }
+  .btn-disabled { background: #334155; color: var(--muted); }
+  .btn-tap {
+    background: linear-gradient(145deg, #2563eb, #1e40af);
+    color: white;
+    font-size: 24px;
+    padding: 32px 20px;
+    border-radius: 20px;
+    box-shadow: 0 8px 25px rgba(37,99,235,0.35);
+    user-select: none;
+    touch-action: manipulation;
+  }
+  .btn-tap:active { transform: scale(0.94); }
+  input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: white;
+    margin-top: 8px;
+    font-size: 15px;
+    outline: none;
+  }
+  input:focus { border-color: var(--accent); }
+  .nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(21,31,50,0.95);
+    backdrop-filter: blur(10px);
+    display: flex;
+    border-top: 1px solid var(--border);
+    z-index: 50;
+  }
+  .nav button {
+    flex: 1;
+    background: none;
+    border: none;
+    color: var(--muted);
+    padding: 12px 4px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .nav button.active {
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .tab { display: none; }
+  .tab.active { display: block; }
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+    z-index: 100;
+  }
+  .modal-content {
+    background: var(--card);
+    padding: 20px;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--border);
+  }
+  .card-num {
+    background: var(--bg);
+    padding: 13px;
+    border-radius: 10px;
+    text-align: center;
+    font-family: monospace;
+    font-size: 17px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border: 1px dashed var(--accent);
+    margin: 12px 0;
+    color: var(--accent);
+  }
+  .small { font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .warn-banner {
+    background: rgba(239,68,68,0.15);
+    border: 1px solid var(--danger);
+    color: #fca5a5;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    margin-top: 10px;
+    display: none;
+  }
+  .progress-bg {
+    background: var(--bg);
+    height: 8px;
+    border-radius: 99px;
+    overflow: hidden;
+    margin: 10px 0;
+  }
+  .progress-fill {
+    background: var(--success);
+    height: 100%;
+    width: 0%;
+    transition: width 0.3s;
+  }
 </style>
 </head>
 <body>
 
-<div id="toast" class="toast"></div>
+<!-- ЭКРАН РЕГИСТРАЦИИ / ВХОДА ЧЕРЕЗ TELEGRAM -->
+<div id="authScreen" class="auth-screen" style="display:none;">
+  <div class="card">
+    <div class="tg-logo">✈️</div>
+    <h2 style="margin:0 0 8px;">Вход через Telegram</h2>
+    <p class="small">Чтобы ваш баланс монет, прокачки и лицензионные ключи сохранялись за вашим аккаунтом, откройте приложение через официального бота или авторизуйтесь через Telegram.</p>
+    
+    <a href="https://t.me/dronpint_arex_pro_Shop_bot" target="_blank" class="btn btn-tg" style="margin-top:14px;">
+      🚀 Открыть в боте @dronpint_arex_pro_Shop_bot
+    </a>
 
-<div class="header">
-  <div class="user-info">
-    <div class="avatar" id="uAvatar">И</div>
-    <div>
-      <div style="font-weight:700;font-size:14px;" id="uName">Игрок</div>
-      <div style="font-size:11px;color:var(--muted);" id="uUser">@player</div>
-    </div>
-  </div>
-  <div class="online-pill">● Онлайн: <span id="onlineCount">42</span></div>
-</div>
-
-<div class="stats-bar">
-  <div class="stat-box">
-    <div class="stat-label">Баланс монет</div>
-    <div class="stat-val" style="color:var(--gold);"><span id="coinsVal">0</span> 🪙</div>
-  </div>
-  <div class="stat-box">
-    <div class="stat-label">Сила (+1 / 5 мин)</div>
-    <div class="stat-val" style="color:var(--green);"><span id="energyVal">100</span> / <span id="maxEnergyVal">100</span> ⚡</div>
-    <div style="font-size:10px;color:var(--muted);" id="regenTimer">Полный запас</div>
+    <div id="tgWidgetContainer" style="margin-top:16px; display:flex; justify-content:center;"></div>
+    <p class="small" style="margin-top:14px;">Авторизация без паролей — используется ваш Telegram ID.</p>
   </div>
 </div>
 
-<!-- ВИТРИНА -->
-<div id="sec-shop" class="section active">
+<!-- ОСНОВНОЕ ПРИЛОЖЕНИЕ -->
+<div id="appContainer" style="display:none;">
   <div class="card">
-    <h3>🎮 Полная версия игры TacticalGrid</h3>
-    <p>Доступ ко всем картам, режимам против ИИ и песочнице. Разраб: @eldar3275</p>
-    <div class="price-row">
-      <div class="price">20 грн</div>
-      <button class="btn" onclick="openPay('Полная версия игры TacticalGrid', 20)">Купить</button>
+    <div class="header">
+      <div class="user-profile">
+        <div class="avatar" id="userAvatar">И</div>
+        <div>
+          <strong id="userName" style="font-size:15px;">Игрок</strong>
+          <div class="small" id="userHandle">@player</div>
+        </div>
+      </div>
+      <span class="tg-id-badge" id="userTgId">ID: —</span>
     </div>
-  </div>
-
-  <div class="card">
-    <h3>🔑 Дополнительный ключ</h3>
-    <p>Второй лицензионный ключ для друга или второго устройства.</p>
-    <div class="price-row">
-      <div class="price">25 грн</div>
-      <button class="btn" onclick="openPay('Дополнительный ключ', 25)">Купить</button>
+    <div class="stats">
+      <div class="stat-box">
+        <div class="small">Баланс монет</div>
+        <div class="stat-val" id="coinsDisplay">0 🪙</div>
+      </div>
+      <div class="stat-box">
+        <div class="small">Сила (+1 / 5 мин)</div>
+        <div class="stat-val" id="powerDisplay">100 / 100 ⚡</div>
+      </div>
     </div>
   </div>
 
-  <div class="card">
-    <h3>👑 VIP-пакет + исходник .aia</h3>
-    <p>Полная игра, VIP-статус и исходный файл проекта для MIT App Inventor.</p>
-    <div class="price-row">
-      <div class="price">100 грн</div>
-      <button class="btn btn-gold" onclick="openPay('VIP-пакет + исходник .aia', 100)">Купить VIP</button>
+  <!-- МАГАЗИН -->
+  <div id="tab-shop" class="tab active">
+    <div class="card">
+      <h3 style="margin:0 0 6px;">🎮 Полная версия игры TacticalGrid</h3>
+      <p class="small">Доступ ко всем картам, режимам против ИИ и песочнице. Разраб: @eldar3275</p>
+      <button class="btn btn-primary" onclick="openPay('Полная версия игры TacticalGrid', 20)">Купить — 20 грн</button>
     </div>
-  </div>
-</div>
-
-<!-- КЛИКЕР И ПРОМОКОДЫ -->
-<div id="sec-clicker" class="section">
-  <div class="card clicker-area">
-    <button id="tapBtn" class="tap-btn" onclick="handleTap()">КЛИК<br><span style="font-size:13px;" id="tapHint">+1 🪙 / -1 ⚡</span></button>
-    <p style="margin-top:10px;font-size:12px;" id="warnText">Если сила 0 — клик отнимает 2 монеты!</p>
-    <div class="progress-wrap"><div id="keyProgress" class="progress-fill"></div></div>
-    <div style="font-size:12px;color:var(--muted);"><span id="progText">0</span> / 100 000 🪙 до бесплатного ключа</div>
-    <button id="claimKeyBtn" class="btn btn-green btn-full" style="display:none;" onclick="claimFreeKey()">🎁 Забрать ключ за 100 000 монет</button>
-  </div>
-
-  <div class="card">
-    <h3>⚡ Прокачки</h3>
-    <div class="price-row">
-      <div><b>+25 макс. силы</b><div style="font-size:11px;color:var(--muted);">Уровень: <span id="lvlCap">1</span></div></div>
-      <button class="btn" onclick="buyUpgrade('cap')"><span id="costCap">500</span> 🪙</button>
+    <div class="card">
+      <h3 style="margin:0 0 6px;">🔑 Дополнительный ключ</h3>
+      <p class="small">Второй лицензионный ключ для друга или второго устройства.</p>
+      <button class="btn btn-primary" onclick="openPay('Дополнительный ключ', 25)">Купить — 25 грн</button>
     </div>
-    <div class="price-row" style="margin-top:10px;">
-      <div><b>+1 монета за клик</b><div style="font-size:11px;color:var(--muted);">Сила клика: <span id="clickPowerVal">1</span></div></div>
-      <button class="btn" onclick="buyUpgrade('power')"><span id="costPower">1000</span> 🪙</button>
+    <div class="card">
+      <h3 style="margin:0 0 6px;">👑 VIP-пакет + исходник .aia</h3>
+      <p class="small">Полная игра, VIP-статус и исходный файл проекта для MIT App Inventor.</p>
+      <button class="btn btn-primary" onclick="openPay('VIP-пакет + исходник .aia', 100)">Купить VIP — 100 грн</button>
     </div>
   </div>
 
-  <div class="card">
-    <h3>🎟 Промокод / Код из админки</h3>
-    <p>Введите промокод (START1000, POWER50, CLICK5, TACTICAL50K, ELDARVIP) или код начисления/списания от админа.</p>
-    <input type="text" id="promoInput" class="input" placeholder="Введите код...">
-    <button class="btn btn-full" onclick="applyPromo()">Активировать код</button>
-  </div>
-</div>
+  <!-- МОНЕТЫ -->
+  <div id="tab-clicker" class="tab">
+    <div class="card" style="text-align:center;">
+      <button class="btn btn-tap" id="tapBtn">КЛИК<br><span style="font-size:14px; font-weight:normal;" id="tapInfo">+1 🪙 / -1 ⚡</span></button>
+      <div class="warn-banner" id="antiCheatWarn">⚠️ Обнаружен автокликер! Сделайте паузу 2 секунды.</div>
+      <p class="small" style="margin-top:10px;">Если сила 0 — клик отнимает 2 монеты!</p>
+      
+      <div class="progress-bg"><div class="progress-fill" id="goalBar"></div></div>
+      <p style="margin:6px 0;"><strong id="goalText">0 / 100 000 🪙</strong> до бесплатного ключа</p>
+      <button class="btn btn-success" onclick="claimFreeKey()">🎁 Забрать ключ за 100 000 монет</button>
+    </div>
 
-<!-- МОИ КЛЮЧИ -->
-<div id="sec-keys" class="section">
-  <div class="card">
-    <h3>🔐 Ваши лицензионные ключи</h3>
-    <div id="keysList"></div>
-  </div>
-</div>
+    <div class="card">
+      <h3 style="margin:0 0 12px;">⚡ Прокачки</h3>
+      <div style="margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid var(--border);">
+        <div style="display:flex; justify-content:space-between;">
+          <strong>+25 макс. силы</strong>
+          <span class="small">Уровень: <span id="powerLvl">1</span></span>
+        </div>
+        <div class="small" style="margin:4px 0;">Увеличивает только максимальный запас силы</div>
+        <button class="btn btn-primary" onclick="buyMaxPower()">Улучшить — <span id="powerCost">500</span> 🪙</button>
+      </div>
+      <div>
+        <div style="display:flex; justify-content:space-between;">
+          <strong>+1 монета за клик</strong>
+          <span class="small">Сила клика: <span id="clickLvl">1</span></span>
+        </div>
+        <button class="btn btn-primary" onclick="buyClickPower()">Улучшить — <span id="clickCost">1000</span> 🪙</button>
+      </div>
+    </div>
 
-<!-- ПОМОЩЬ -->
-<div id="sec-help" class="section">
-  <div class="card">
-    <h3>ℹ️ Информация и поддержка</h3>
-    <p>1. Выберите товар во вкладке «Магазин» и оплатите на карту.<br>
-       2. Прикрепите скриншот чека — админ проверит его и выдаст ключ.<br>
-       3. Либо накопите 100 000 монет в кликере и заберите ключ бесплатно.</p>
-    <p>Разработчик: <b>@eldar3275</b><br>Бот магазина: <b>@dronpint_arex_pro_Shop_bot</b></p>
+    <div class="card">
+      <h3 style="margin:0 0 6px;">🎟 Код от администратора</h3>
+      <p class="small">Введите одноразовый код, выданный владельцем. Количество активаций не ограничено.</p>
+      <input type="text" id="promoInput" placeholder="Вставьте код сюда..." autocomplete="off">
+      <button class="btn btn-primary" onclick="redeemCode()">Активировать код</button>
+    </div>
   </div>
-</div>
 
-<!-- МОДАЛКА ОПЛАТЫ -->
-<div id="payModal" class="modal">
-  <div class="modal-box">
-    <h3 id="payTitle">Оплата заказа</h3>
-    <p style="font-size:13px;color:var(--muted);margin-top:4px;">Переведите ровно <b style="color:#fff;" id="payAmount">20 грн</b> на карту (нажмите чтобы скопировать):</p>
-    <div class="card-num" onclick="copyCard()">4441 1144 3394 8724 📋</div>
-    <label style="font-size:12px;color:var(--muted);display:block;margin-top:8px;">Прикрепить фото оплаты (чек):</label>
-    <input type="file" id="receiptFile" accept="image/*" class="input">
-    <button class="btn btn-green btn-full" onclick="submitPayment()">✅ Я оплатил</button>
-    <button class="btn btn-red btn-full" onclick="closePay()">Отмена</button>
+  <!-- КЛЮЧИ -->
+  <div id="tab-keys" class="tab">
+    <div class="card">
+      <h3 style="margin:0 0 10px;">🔐 Ваши лицензионные ключи</h3>
+      <div id="keysList" class="small">У вас пока нет активированных ключей.</div>
+    </div>
   </div>
-</div>
 
-<div class="nav">
-  <button class="active" onclick="switchTab('shop', this)">🛒<span>Магазин</span></button>
-  <button onclick="switchTab('clicker', this)">🪙<span>Монеты</span></button>
-  <button onclick="switchTab('keys', this)">🔑<span>Ключи</span></button>
-  <button onclick="switchTab('help', this)">❓<span>Помощь</span></button>
+  <!-- ПОМОЩЬ -->
+  <div id="tab-help" class="tab">
+    <div class="card">
+      <h3 style="margin:0 0 10px;">ℹ Информация и поддержка</h3>
+      <p class="small">1. Выберите товар во вкладке «Магазин» и оплатите на карту.</p>
+      <p class="small">2. Прикрепите скриншот чека — админ проверит его и выдаст ключ на ваш Telegram ID.</p>
+      <p class="small">3. Либо накопите 100 000 монет в кликере и заберите ключ бесплатно.</p>
+      <p class="small" style="margin-top:12px;">Разработчик: <strong>@eldar3275</strong><br>Бот магазина: <strong>@dronpint_arex_pro_Shop_bot</strong></p>
+    </div>
+  </div>
+
+  <!-- МОДАЛКА ОПЛАТЫ -->
+  <div class="modal" id="payModal">
+    <div class="modal-content">
+      <h3 style="margin-top:0;">Оплата заказа</h3>
+      <p class="small" id="payItemTitle">Товар</p>
+      <p style="font-size:14px;">Переведите ровно <strong id="payAmount" style="color:var(--accent);">20 грн</strong> на карту (нажмите чтобы скопировать):</p>
+      <div class="card-num" onclick="copyCard()">4441 1144 3394 8724 📋</div>
+      <label class="small">Прикрепить фото оплаты (чек):</label>
+      <input type="file" id="receiptFile" accept="image/*">
+      <button class="btn btn-success" onclick="confirmPayment()">✅ Я оплатил</button>
+      <button class="btn btn-disabled" onclick="closePay()">Отмена</button>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="active" onclick="switchTab('shop', this)">🛒 Магазин</button>
+    <button onclick="switchTab('clicker', this)">🪙 Монеты</button>
+    <button onclick="switchTab('keys', this)">🔑 Ключи</button>
+    <button onclick="switchTab('help', this)">❓ Помощь</button>
+  </div>
 </div>
 
 <script>
-const REGEN_MS = 5 * 60 * 1000;
-let state = JSON.parse(localStorage.getItem('tg_shop_state_v9') || 'null') || {
-  coins: 0,
-  energy: 100,
-  maxEnergy: 100,
-  clickPower: 1,
-  lvlCap: 1,
-  lastRegen: Date.now(),
-  usedPromos: [],
-  keys: []
-};
+  const SECRET_SALT = "ELDAR_TG_2026_KEY";
+  const BOT_USERNAME = "dronpint_arex_pro_Shop_bot";
+  const USERS_DB_KEY = "tg_registered_users_db";
 
-let currentOrder = { title: '', amount: 0 };
+  let currentUser = null;
+  let state = null;
 
-function saveState() {
-  localStorage.setItem('tg_shop_state_v9', JSON.stringify(state));
-}
+  // Колбэк для официального виджета входа Telegram в браузере
+  window.onTelegramAuth = function(user) {
+    initUserSession({
+      id: String(user.id),
+      first_name: user.first_name || 'Игрок',
+      username: user.username || '',
+      photo_url: user.photo_url || ''
+    });
+  };
 
-function toast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.display = 'block';
-  setTimeout(() => t.style.display = 'none', 2500);
-}
+  function boot() {
+    const tg = window.Telegram?.WebApp;
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+      tg.expand();
+      const u = tg.initDataUnsafe.user;
+      initUserSession({
+        id: String(u.id),
+        first_name: u.first_name || 'Игрок',
+        username: u.username || '',
+        photo_url: u.photo_url || ''
+      });
+      return;
+    }
 
-function syncRegen() {
-  const now = Date.now();
-  if (state.energy < state.maxEnergy) {
-    const passed = now - state.lastRegen;
-    if (passed >= REGEN_MS) {
-      const gained = Math.floor(passed / REGEN_MS);
-      state.energy = Math.min(state.maxEnergy, state.energy + gained);
-      state.lastRegen = state.energy >= state.maxEnergy ? now : state.lastRegen + gained * REGEN_MS;
+    const savedUser = JSON.parse(localStorage.getItem('tg_active_session') || 'null');
+    if (savedUser && savedUser.id) {
+      initUserSession(savedUser);
+      return;
+    }
+
+    // Показываем только экран входа через Telegram (без тестового режима)
+    document.getElementById('authScreen').style.display = 'block';
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = "https://telegram.org/js/telegram-widget.js?22";
+    script.setAttribute("data-telegram-login", BOT_USERNAME);
+    script.setAttribute("data-size", "large");
+    script.setAttribute("data-radius", "12");
+    script.setAttribute("data-onauth", "onTelegramAuth(user)");
+    script.setAttribute("data-request-access", "write");
+    document.getElementById('tgWidgetContainer').appendChild(script);
+  }
+
+  function initUserSession(tgUser) {
+    currentUser = tgUser;
+    localStorage.setItem('tg_active_session', JSON.stringify(tgUser));
+
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('appContainer').style.display = 'block';
+
+    document.getElementById('userName').innerText = tgUser.first_name;
+    document.getElementById('userHandle').innerText = tgUser.username ? '@' + tgUser.username : 'Без @username';
+    document.getElementById('userTgId').innerText = 'ID: ' + tgUser.id;
+
+    const avatarEl = document.getElementById('userAvatar');
+    if (tgUser.photo_url) {
+      avatarEl.innerHTML = `<img src="${tgUser.photo_url}" alt="avatar">`;
+    } else {
+      avatarEl.innerText = (tgUser.first_name || 'И').charAt(0).toUpperCase();
+    }
+
+    const db = JSON.parse(localStorage.getItem(USERS_DB_KEY) || '{}');
+    if (!db[tgUser.id]) {
+      db[tgUser.id] = {
+        id: tgUser.id,
+        first_name: tgUser.first_name,
+        username: tgUser.username || '',
+        registeredAt: new Date().toLocaleString(),
+        coins: 0,
+        power: 100,
+        maxPower: 100,
+        powerLvl: 1,
+        powerCost: 500,
+        clickPower: 1,
+        clickCost: 1000,
+        keys: [],
+        lastRegen: Date.now()
+      };
+      localStorage.setItem(USERS_DB_KEY, JSON.stringify(db));
+    } else {
+      db[tgUser.id].first_name = tgUser.first_name;
+      db[tgUser.id].username = tgUser.username || '';
+      localStorage.setItem(USERS_DB_KEY, JSON.stringify(db));
+    }
+
+    state = db[tgUser.id];
+    updateUI();
+  }
+
+  function saveState() {
+    if (!currentUser || !state) return;
+    const db = JSON.parse(localStorage.getItem(USERS_DB_KEY) || '{}');
+    db[currentUser.id] = state;
+    localStorage.setItem(USERS_DB_KEY, JSON.stringify(db));
+    updateUI();
+  }
+
+  function updateUI() {
+    if (!state) return;
+    document.getElementById('coinsDisplay').innerText = state.coins.toLocaleString() + ' 🪙';
+    document.getElementById('powerDisplay').innerText = `${state.power} / ${state.maxPower} ⚡`;
+    document.getElementById('tapInfo').innerText = `+${state.clickPower} 🪙 / -1 ⚡`;
+    document.getElementById('goalText').innerText = `${state.coins.toLocaleString()} / 100 000 🪙`;
+    document.getElementById('goalBar').style.width = Math.min(100, (state.coins / 100000) * 100) + '%';
+    document.getElementById('powerLvl').innerText = state.powerLvl;
+    document.getElementById('powerCost').innerText = state.powerCost.toLocaleString();
+    document.getElementById('clickLvl').innerText = state.clickPower;
+    document.getElementById('clickCost').innerText = state.clickCost.toLocaleString();
+
+    const keysDiv = document.getElementById('keysList');
+    if (!state.keys || state.keys.length === 0) {
+      keysDiv.innerHTML = 'У вас пока нет активированных ключей.';
+    } else {
+      keysDiv.innerHTML = state.keys.map(k => `<div class="card-num" onclick="navigator.clipboard.writeText('${k}');alert('Ключ скопирован!')">${k} 📋</div>`).join('');
+    }
+  }
+
+  setInterval(() => {
+    if (!state) return;
+    const now = Date.now();
+    const gained = Math.floor((now - state.lastRegen) / (5 * 60 * 1000));
+    if (gained > 0) {
+      if (state.power < state.maxPower) {
+        state.power = Math.min(state.maxPower, state.power + gained);
+      }
+      state.lastRegen = now;
       saveState();
     }
-    const left = Math.max(0, REGEN_MS - (now - state.lastRegen));
-    const m = Math.floor(left / 60000);
-    const s = Math.floor((left % 60000) / 1000);
-    document.getElementById('regenTimer').textContent = `+1 ⚡ через ${m}:${s < 10 ? '0'+s : s}`;
-  } else {
-    state.lastRegen = now;
-    document.getElementById('regenTimer').textContent = 'Полный запас';
+  }, 10000);
+
+  // Защита от автокликера
+  let lastTapTime = 0;
+  let tapIntervals = [];
+  let lockUntil = 0;
+  const MIN_TAP_MS = 105;
+
+  document.getElementById('tapBtn').addEventListener('pointerdown', function(e) {
+    if (!e.isTrusted || !state) return;
+
+    const now = Date.now();
+    const warnEl = document.getElementById('antiCheatWarn');
+
+    if (now < lockUntil) {
+      warnEl.style.display = 'block';
+      return;
+    }
+
+    const diff = now - lastTapTime;
+    if (diff < MIN_TAP_MS) {
+      lockUntil = now + 2000;
+      warnEl.style.display = 'block';
+      return;
+    }
+
+    if (lastTapTime > 0 && diff < 1000) {
+      tapIntervals.push(diff);
+      if (tapIntervals.length > 8) tapIntervals.shift();
+      if (tapIntervals.length === 8) {
+        const avg = tapIntervals.reduce((a, b) => a + b, 0) / 8;
+        const variance = tapIntervals.reduce((a, b) => a + Math.abs(b - avg), 0) / 8;
+        if (variance < 4) {
+          lockUntil = now + 3000;
+          tapIntervals = [];
+          warnEl.style.display = 'block';
+          return;
+        }
+      }
+    }
+
+    warnEl.style.display = 'none';
+    lastTapTime = now;
+
+    if (state.power > 0) {
+      state.power -= 1;
+      state.coins += state.clickPower;
+    } else {
+      state.coins = Math.max(0, state.coins - 2);
+    }
+    saveState();
+  });
+
+  function buyMaxPower() {
+    if (state.coins < state.powerCost) return alert('Недостаточно монет!');
+    state.coins -= state.powerCost;
+    state.maxPower += 25;
+    state.powerLvl += 1;
+    state.powerCost = Math.round(state.powerCost * 1.5);
+    saveState();
   }
-}
 
-function render() {
-  syncRegen();
-  document.getElementById('coinsVal').textContent = state.coins.toLocaleString('ru-RU');
-  document.getElementById('energyVal').textContent = state.energy;
-  document.getElementById('maxEnergyVal').textContent = state.maxEnergy;
-  document.getElementById('lvlCap').textContent = state.lvlCap;
-  document.getElementById('clickPowerVal').textContent = state.clickPower;
-  document.getElementById('costCap').textContent = (state.lvlCap * 500).toLocaleString('ru-RU');
-  document.getElementById('costPower').textContent = (state.clickPower * 1000).toLocaleString('ru-RU');
-
-  const btn = document.getElementById('tapBtn');
-  if (state.energy > 0) {
-    btn.classList.remove('empty');
-    document.getElementById('tapHint').textContent = `+${state.clickPower} 🪙 / -1 ⚡`;
-  } else {
-    btn.classList.add('empty');
-    document.getElementById('tapHint').textContent = `-2 🪙 (нет силы!)`;
-  }
-
-  const pct = Math.min(100, (state.coins / 100000) * 100);
-  document.getElementById('keyProgress').style.width = pct + '%';
-  document.getElementById('progText').textContent = Math.min(state.coins, 100000).toLocaleString('ru-RU');
-  document.getElementById('claimKeyBtn').style.display = state.coins >= 100000 ? 'block' : 'none';
-
-  const kl = document.getElementById('keysList');
-  if (!state.keys.length) {
-    kl.innerHTML = '<p style="font-size:13px;color:var(--muted);">У вас пока нет активных ключей.</p>';
-  } else {
-    kl.innerHTML = state.keys.map(k => `<div class="key-item"><span>${k}</span><button class="btn" style="padding:4px 8px;font-size:12px;" onclick="navigator.clipboard.writeText('${k}');toast('Ключ скопирован!')">Копия</button></div>`).join('');
-  }
-}
-
-function handleTap() {
-  if (state.energy > 0) {
-    if (state.energy === state.maxEnergy) state.lastRegen = Date.now();
-    state.energy -= 1;
-    state.coins += state.clickPower;
-  } else {
-    state.coins = Math.max(0, state.coins - 2);
-    toast('Сила закончилась! Списано -2 монеты');
-  }
-  saveState();
-  render();
-}
-
-function buyUpgrade(type) {
-  if (type === 'cap') {
-    const cost = state.lvlCap * 500;
-    if (state.coins < cost) return toast('Недостаточно монет!');
-    state.coins -= cost;
-    state.lvlCap += 1;
-    state.maxEnergy += 25;
-    state.energy += 25;
-    toast('Запас силы увеличен на +25!');
-  } else if (type === 'power') {
-    const cost = state.clickPower * 1000;
-    if (state.coins < cost) return toast('Недостаточно монет!');
-    state.coins -= cost;
+  function buyClickPower() {
+    if (state.coins < state.clickCost) return alert('Недостаточно монет!');
+    state.coins -= state.clickCost;
     state.clickPower += 1;
-    toast('Мощность клика +1!');
-  }
-  saveState();
-  render();
-}
-
-function genKey() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const part = () => Array.from({length:4}, () => chars[Math.floor(Math.random()*chars.length)]).join('');
-  return `TG-${part()}-${part()}-${part()}`;
-}
-
-function claimFreeKey() {
-  if (state.coins < 100000) return;
-  state.coins -= 100000;
-  const k = genKey();
-  state.keys.push(k);
-  saveState();
-  render();
-  toast('Ключ получен! Смотрите во вкладке «Ключи»');
-}
-
-function applyPromo() {
-  const raw = document.getElementById('promoInput').value.trim();
-  if (!raw) return toast('Введите код');
-  const up = raw.toUpperCase();
-
-  const promos = {
-    'START1000': { coins: 1000, msg: '+1 000 монет!' },
-    'POWER50': { maxEnergy: 50, msg: '+50 макс. силы!' },
-    'CLICK5': { clickPower: 5, msg: '+5 к силе клика!' },
-    'TACTICAL50K': { coins: 50000, msg: '+50 000 монет!' },
-    'ELDARVIP': { coins: 100000, clickPower: 10, msg: '+100 000 монет и +10 клик!' }
-  };
-
-  if (promos[up]) {
-    if (state.usedPromos.includes(up)) return toast('Этот промокод уже активирован!');
-    state.usedPromos.push(up);
-    if (promos[up].coins) state.coins += promos[up].coins;
-    if (promos[up].maxEnergy) { state.maxEnergy += promos[up].maxEnergy; state.energy += promos[up].maxEnergy; }
-    if (promos[up].clickPower) state.clickPower += promos[up].clickPower;
-    saveState(); render();
-    document.getElementById('promoInput').value = '';
-    return toast('Активировано: ' + promos[up].msg);
+    state.clickCost = Math.round(state.clickCost * 1.8);
+    saveState();
   }
 
-  if (up.startsWith('ADM-')) {
+  function claimFreeKey() {
+    if (state.coins < 100000) return alert('Нужно накопить 100 000 монет!');
+    state.coins -= 100000;
+    const newKey = 'TG-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+    state.keys.push(newKey);
+    saveState();
+    alert('Вы получили ключ: ' + newKey);
+  }
+
+  function signData(str) {
+    let hash = 0;
+    const full = str + SECRET_SALT;
+    for (let i = 0; i < full.length; i++) {
+      hash = ((hash << 5) - hash) + full.charCodeAt(i);
+      hash |= 0;
+    }
+    return Math.abs(hash).toString(36).toUpperCase();
+  }
+
+  function redeemCode() {
+    const rawCode = document.getElementById('promoInput').value.trim();
+    if (!rawCode) return alert('Введите код!');
+
+    const now = Date.now();
+    const usedKey = 'tg_used_codes_' + currentUser.id;
+    let usedCodes = JSON.parse(localStorage.getItem(usedKey) || '[]');
+    if (usedCodes.includes(rawCode)) {
+      return alert('Этот код уже был активирован на вашем аккаунте!');
+    }
+
     try {
-      const payload = JSON.parse(atob(raw.slice(4)));
-      if (state.usedPromos.includes(raw)) return toast('Код уже использован');
-      state.usedPromos.push(raw);
-      if (payload.coins) state.coins = Math.max(0, state.coins + Number(payload.coins));
-      if (payload.energy) { state.maxEnergy += Number(payload.energy); state.energy += Number(payload.energy); }
-      if (payload.power) state.clickPower += Number(payload.power);
-      if (payload.addKey) state.keys.push(payload.addKey);
-      if (payload.revokeKey) state.keys = state.keys.filter(k => k !== payload.revokeKey);
-      saveState(); render();
+      const parts = rawCode.split('.');
+      if (parts.length !== 2 || !parts.startsWith('TG-')) throw new Error();
+
+      const b64 = parts.slice(3);
+      const sig = parts;
+      if (signData(b64) !== sig) throw new Error();
+
+      const data = JSON.parse(atob(b64));
+      if (!data.exp || now > data.exp) {
+        return alert('Срок действия этого кода истек! Коды действуют только 1–2 часа.');
+      }
+
+      if (data.t === 'c') {
+        state.coins = Math.max(0, state.coins + Number(data.v));
+        alert(data.v >= 0 ? `Баланс пополнен на +${data.v} монет!` : `Списано ${Math.abs(data.v)} монет.`);
+      } else if (data.t === 'k') {
+        state.keys.push(data.v);
+        alert(`Выдан новый ключ: ${data.v}`);
+      } else if (data.t === 'rk') {
+        state.keys = [];
+        alert('Ваш лицензионный ключ был отозван администратором.');
+      }
+
+      usedCodes.push(rawCode);
+      localStorage.setItem(usedKey, JSON.stringify(usedCodes));
       document.getElementById('promoInput').value = '';
-      return toast('Синхронизация с админкой выполнена!');
-    } catch(e) {}
+      saveState();
+
+    } catch (e) {
+      alert('Неверный или поврежденный код!');
+    }
   }
 
-  toast('Неверный промокод');
-}
-
-function switchTab(id, el) {
-  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-  document.getElementById('sec-' + id).classList.add('active');
-  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-  el.classList.add('active');
-}
-
-function openPay(title, amount) {
-  currentOrder = { title, amount };
-  document.getElementById('payTitle').textContent = title;
-  document.getElementById('payAmount').textContent = amount + ' грн';
-  document.getElementById('payModal').classList.add('open');
-}
-
-function closePay() {
-  document.getElementById('payModal').classList.remove('open');
-}
-
-function copyCard() {
-  navigator.clipboard.writeText('4441114433948724');
-  toast('Номер карты скопирован!');
-}
-
-function submitPayment() {
-  const file = document.getElementById('receiptFile').files[0];
-  if (!file) return toast('Прикрепите фото чека оплаты!');
-  const reader = new FileReader();
-  reader.onload = () => {
-    const orders = JSON.parse(localStorage.getItem('tg_pending_orders') || '[]');
-    orders.unshift({
-      id: Date.now(),
-      user: document.getElementById('uUser').textContent,
-      title: currentOrder.title,
-      amount: currentOrder.amount,
-      photo: reader.result,
-      status: 'pending',
-      time: new Date().toLocaleTimeString()
-    });
-    localStorage.setItem('tg_pending_orders', JSON.stringify(orders));
+  function openPay(title, price) {
+    document.getElementById('payItemTitle').innerText = title;
+    document.getElementById('payAmount').innerText = price + ' грн';
+    document.getElementById('payModal').style.display = 'flex';
+  }
+  function closePay() { document.getElementById('payModal').style.display = 'none'; }
+  function copyCard() {
+    navigator.clipboard.writeText('4441114433948724');
+    alert('Номер карты скопирован!');
+  }
+  function confirmPayment() {
+    if (!document.getElementById('receiptFile').files) return alert('Прикрепите фото чека!');
+    alert(`Заявка от ID ${currentUser.id} отправлена администратору @eldar3275!`);
     closePay();
-    toast('Чек отправлен на проверку администратору!');
-  };
-  reader.readAsDataURL(file);
-}
+  }
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+    btn.classList.add('active');
+  }
 
-setInterval(() => {
-  render();
-  document.getElementById('onlineCount').textContent = 38 + Math.floor(Math.random() * 12);
-}, 1000);
-render();
+  boot();
 </script>
 </body>
 </html>
