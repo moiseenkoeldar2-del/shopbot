@@ -1,0 +1,771 @@
+
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>dronpint_arex_pro Shop — Telegram Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-color: var(--tg-theme-bg-color, #0f172a);
+            --secondary-bg: var(--tg-theme-secondary-bg-color, #1e293b);
+            --text-color: var(--tg-theme-text-color, #f8fafc);
+            --hint-color: var(--tg-theme-hint-color, #94a3b8);
+            --button-color: var(--tg-theme-button-color, #3b82f6);
+            --button-text: var(--tg-theme-button-text-color, #ffffff);
+            --accent-green: #10b981;
+            --accent-gold: #f59e0b;
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding-bottom: 84px;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header / Profile Card */
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            padding: 18px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            color: #fff;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-details h1 {
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .user-details p {
+            font-size: 13px;
+            color: var(--hint-color);
+            margin-top: 2px;
+        }
+
+        .status-badge {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-green);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        /* Container */
+        .container {
+            padding: 16px;
+            max-width: 540px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: var(--hint-color);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        /* Product Cards */
+        .product-card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+            position: relative;
+            transition: transform 0.15s ease;
+        }
+
+        .product-card:active {
+            transform: scale(0.99);
+        }
+
+        .product-card.featured {
+            border-color: rgba(245, 158, 11, 0.45);
+            background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, var(--secondary-bg) 100%);
+        }
+
+        .badge-popular {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--accent-gold);
+            color: #000;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 8px;
+            text-transform: uppercase;
+        }
+
+        .product-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .product-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            background: rgba(59, 130, 246, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .product-title {
+            font-size: 17px;
+            font-weight: 700;
+        }
+
+        .product-sub {
+            font-size: 13px;
+            color: var(--hint-color);
+            margin-top: 2px;
+        }
+
+        .features-list {
+            list-style: none;
+            margin: 12px 0 16px 0;
+            font-size: 13.5px;
+            color: #cbd5e1;
+        }
+
+        .features-list li {
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .features-list li span {
+            color: var(--accent-green);
+            font-weight: bold;
+        }
+
+        .product-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .price-block .price {
+            font-size: 20px;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        .price-block .old-price {
+            font-size: 13px;
+            color: var(--hint-color);
+            text-decoration: line-through;
+            margin-left: 6px;
+        }
+
+        .btn-buy {
+            background: var(--button-color);
+            color: var(--button-text);
+            border: none;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .btn-buy:active {
+            opacity: 0.85;
+        }
+
+        /* Tabs / Views */
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        /* Keys View */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            background: var(--secondary-bg);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .empty-state .icon {
+            font-size: 42px;
+            margin-bottom: 12px;
+        }
+
+        .key-card {
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .key-box {
+            background: #0f172a;
+            border: 1px dashed #3b82f6;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 15px;
+            color: #60a5fa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0 14px 0;
+            z-index: 30;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--hint-color);
+            font-size: 11px;
+            font-weight: 600;
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 33.33%;
+        }
+
+        .nav-item.active {
+            color: #3b82f6;
+        }
+
+        .nav-item .nav-icon {
+            font-size: 20px;
+        }
+
+        /* Payment Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+            z-index: 50;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-sheet {
+            background: #1e293b;
+            width: 100%;
+            max-width: 540px;
+            border-radius: 22px 22px 0 0;
+            padding: 20px 18px 28px 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            animation: slideUp 0.25s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .card-box {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 14px;
+            padding: 14px;
+            margin: 14px 0;
+        }
+
+        .card-label {
+            font-size: 12px;
+            color: var(--hint-color);
+            margin-bottom: 6px;
+        }
+
+        .card-number-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .card-number {
+            font-family: monospace;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+
+        .btn-copy {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-confirm {
+            width: 100%;
+            background: var(--accent-green);
+            color: #fff;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 700;
+            margin-top: 12px;
+            cursor: pointer;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #10b981;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast" class="toast">Скопировано в буфер обмена!</div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="user-info">
+            <div class="avatar" id="userAvatar">DS</div>
+            <div class="user-details">
+                <h1 id="userName">dronpint_arex_pro Shop</h1>
+                <p id="userHandle">@dronpint_arex_pro_Shop_bot</p>
+            </div>
+        </div>
+        <div class="status-badge">
+            <span class="dot"></span>
+            <span id="onlineCount">Онлайн: 14</span>
+        </div>
+    </div>
+
+    <!-- Main Store View -->
+    <div id="view-store" class="view active container">
+        <div class="section-title">Каталог товаров и доступа</div>
+
+        <!-- Item 1 -->
+        <div class="product-card">
+            <div class="product-header">
+                <div class="product-icon">🗺️</div>
+                <div>
+                    <div class="product-title">Базовый доступ (APK + Ключ)</div>
+                    <div class="product-sub">Полная версия игры для Android</div>
+                </div>
+            </div>
+            <ul class="features-list">
+                <li><span>✓</span> Установочный файл игры (APK)</li>
+                <li><span>✓</span> Личный лицензионный ключ навсегда</li>
+                <li><span>✓</span> Доступ ко всем картам и сценариям</li>
+            </ul>
+            <div class="product-footer">
+                <div class="price-block">
+                    <span class="price">150 ₴</span>
+                    <span class="old-price">250 ₴</span>
+                </div>
+                <button class="btn-buy" onclick="openPayModal('Базовый доступ (APK + Ключ)', '150 ₴')">Купить</button>
+            </div>
+        </div>
+
+        <!-- Item 2 -->
+        <div class="product-card featured">
+            <div class="badge-popular">Хит продаж</div>
+            <div class="product-header">
+                <div class="product-icon">👑</div>
+                <div>
+                    <div class="product-title">VIP Полный Пакет + Исходники</div>
+                    <div class="product-sub">Игра + Web-версия + проект .AIA</div>
+                </div>
+            </div>
+            <ul class="features-list">
+                <li><span>✓</span> Всё из базового тарифа + VIP-статус</li>
+                <li><span>✓</span> Исходный код проекта (.AIA) для редактирования</li>
+                <li><span>✓</span> Бесплатные обновления и приоритетная поддержка</li>
+            </ul>
+            <div class="product-footer">
+                <div class="price-block">
+                    <span class="price">300 ₴</span>
+                    <span class="old-price">500 ₴</span>
+                </div>
+                <button class="btn-buy" onclick="openPayModal('VIP Полный Пакет + Исходники', '300 ₴')">Купить</button>
+            </div>
+        </div>
+
+        <!-- Item 3 -->
+        <div class="product-card">
+            <div class="product-header">
+                <div class="product-icon">🔑</div>
+                <div>
+                    <div class="product-title">Дополнительный ключ активации</div>
+                    <div class="product-sub">Для второго устройства или друга</div>
+                </div>
+            </div>
+            <ul class="features-list">
+                <li><span>✓</span> Мгновенная генерация ключа после проверки</li>
+                <li><span>✓</span> Привязка к вашему аккаунту Telegram</li>
+            </ul>
+            <div class="product-footer">
+                <div class="price-block">
+                    <span class="price">90 ₴</span>
+                </div>
+                <button class="btn-buy" onclick="openPayModal('Дополнительный ключ активации', '90 ₴')">Купить</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- My Keys / Orders View -->
+    <div id="view-keys" class="view container">
+        <div class="section-title">Мои покупки и ключи</div>
+        <div id="ordersList">
+            <div class="empty-state">
+                <div class="icon">📦</div>
+                <h3>У вас пока нет активных заказов</h3>
+                <p style="color: var(--hint-color); font-size: 13px; margin-top: 6px;">
+                    Выберите подходящий пакет в разделе «Магазин». После оплаты ключ и файлы появятся здесь и придут в чат с ботом.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support View -->
+    <div id="view-support" class="view container">
+        <div class="section-title">Информация и помощь</div>
+        <div class="product-card">
+            <h3 style="margin-bottom: 8px;">Как происходит выдача?</h3>
+            <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.5;">
+                1. Выберите нужный товар в каталоге и нажмите «Купить».<br>
+                2. Скопируйте номер карты и переведите точную сумму.<br>
+                3. Нажмите кнопку <b>«Я оплатил — отправить заявку»</b> и отправьте скриншот чека в чат бота <b>@dronpint_arex_pro_Shop_bot</b>.<br>
+                4. Администратор подтвердит платёж, и бот автоматически пришлёт вам файлы и ключ.
+            </p>
+            <button class="btn-buy" style="width: 100%; margin-top: 16px;" onclick="closeToBot()">
+                Перейти в чат с ботом
+            </button>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+        <button class="nav-item active" onclick="switchTab('store', this)">
+            <span class="nav-icon">🛒</span>
+            <span>Магазин</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('keys', this)">
+            <span class="nav-icon">🔑</span>
+            <span>Мои ключи</span>
+        </button>
+        <button class="nav-item" onclick="switchTab('support', this)">
+            <span class="nav-icon">💬</span>
+            <span>Помощь</span>
+        </button>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="payModal" class="modal-overlay" onclick="closeModalOnBg(event)">
+        <div class="modal-sheet">
+            <div class="modal-header">
+                <h2>Оплата заказа</h2>
+                <button class="close-btn" onclick="closePayModal()">✕</button>
+            </div>
+
+            <div style="font-size: 14px; color: #cbd5e1;">
+                Товар: <b id="modalProductName" style="color: #fff;">—</b><br>
+                Сумма к оплате: <b id="modalProductPrice" style="color: var(--accent-green); font-size: 16px;">—</b>
+            </div>
+
+            <div class="card-box">
+                <div class="card-label">Номер карты для перевода (нажмите, чтобы скопировать):</div>
+                <div class="card-number-row">
+                    <span class="card-number" id="cardNumberText">4441 1144 3394 8724</span>
+                    <button class="btn-copy" onclick="copyCard()">Копировать</button>
+                </div>
+            </div>
+
+            <p style="font-size: 12.5px; color: var(--hint-color); line-height: 1.4;">
+                После перевода нажмите кнопку ниже. Заявка автоматически отправится в бот <b>@dronpint_arex_pro_Shop_bot</b> — останется только прикрепить скриншот чека.
+            </p>
+
+            <button class="btn-confirm" onclick="confirmPayment()">
+                ✅ Я оплатил — отправить заявку в бот
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        let selectedProduct = "";
+        let selectedPrice = "";
+        let userUsername = "гость";
+        let userId = "0";
+
+        // Initialize Telegram WebApp
+        if (tg) {
+            tg.ready();
+            tg.expand();
+
+            const user = tg.initDataUnsafe && tg.initDataUnsafe.user;
+            if (user) {
+                userId = user.id;
+                const fullName = [user.first_name, user.last_name].filter(Boolean).join(" ");
+                document.getElementById("userName").textContent = fullName || "Покупатель";
+                userUsername = user.username ? "@" + user.username : "ID: " + user.id;
+                document.getElementById("userHandle").textContent = userUsername;
+
+                if (user.photo_url) {
+                    document.getElementById("userAvatar").innerHTML = `<img src="${user.photo_url}" alt="avatar">`;
+                } else if (fullName) {
+                    document.getElementById("userAvatar").textContent = fullName.charAt(0).toUpperCase();
+                }
+            }
+        }
+
+        // Dynamic online counter simulation
+        setInterval(() => {
+            const base = 12 + Math.floor(Math.random() * 6);
+            document.getElementById("onlineCount").textContent = "Онлайн: " + base;
+        }, 15000);
+
+        function switchTab(tabName, btn) {
+            document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+            document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
+            document.getElementById("view-" + tabName).classList.add("active");
+            btn.classList.add("active");
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
+        }
+
+        function openPayModal(name, price) {
+            selectedProduct = name;
+            selectedPrice = price;
+            document.getElementById("modalProductName").textContent = name;
+            document.getElementById("modalProductPrice").textContent = price;
+            document.getElementById("payModal").classList.add("open");
+            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred("light");
+        }
+
+        function closePayModal() {
+            document.getElementById("payModal").classList.remove("open");
+        }
+
+        function closeModalOnBg(e) {
+            if (e.target.id === "payModal") closePayModal();
+        }
+
+        function showToast(text) {
+            const toast = document.getElementById("toast");
+            toast.textContent = text;
+            toast.style.display = "block";
+            setTimeout(() => { toast.style.display = "none"; }, 2200);
+        }
+
+        function copyCard() {
+            const rawCard = "4441114433948724";
+            navigator.clipboard.writeText(rawCard).then(() => {
+                showToast("Номер карты скопирован!");
+                if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred("success");
+            });
+        }
+
+        function saveLocalOrder(product, price) {
+            const orders = JSON.parse(localStorage.getItem("tg_shop_orders") || "[]");
+            orders.unshift({
+                product,
+                price,
+                status: "Ожидает проверки чека",
+                date: new Date().toLocaleString("ru-RU")
+            });
+            localStorage.setItem("tg_shop_orders", JSON.stringify(orders));
+            renderOrders();
+        }
+
+        function renderOrders() {
+            const orders = JSON.parse(localStorage.getItem("tg_shop_orders") || "[]");
+            const container = document.getElementById("ordersList");
+            if (!orders.length) return;
+
+            container.innerHTML = orders.map(o => `
+                <div class="key-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <b>${o.product}</b>
+                        <span style="color:var(--accent-gold); font-size:12px; font-weight:700;">${o.status}</span>
+                    </div>
+                    <div style="font-size:12px; color:var(--hint-color); margin-top:4px;">
+                        Сумма: ${o.price} • ${o.date}
+                    </div>
+                    <div class="key-box">
+                        <span>Ключ придёт после проверки чека</span>
+                        <span>⏳</span>
+                    </div>
+                </div>
+            `).join("");
+        }
+
+        function confirmPayment() {
+            saveLocalOrder(selectedProduct, selectedPrice);
+            closePayModal();
+
+            const payload = JSON.stringify({
+                action: "payment_submitted",
+                product: selectedProduct,
+                price: selectedPrice,
+                card: "4441114433948724",
+                user: userUsername,
+                user_id: userId
+            });
+
+            if (tg) {
+                try {
+                    tg.sendData(payload);
+                } catch (e) {
+                    showToast("Заявка создана! Отправьте чек в бот.");
+                }
+            } else {
+                showToast("Заявка сохранена! Отправьте чек в @dronpint_arex_pro_Shop_bot");
+            }
+        }
+
+        function closeToBot() {
+            if (tg) {
+                tg.close();
+            } else {
+                window.open("https://t.me/dronpint_arex_pro_Shop_bot", "_blank");
+            }
+        }
+
+        renderOrders();
+    </script>
+</body>
+</html>
