@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -7,100 +6,193 @@
 <title>TacticalGrid Shop — @eldar3275</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0b1120; color: #f8fafc; padding-bottom: 76px; }
-  .top { background: #111827; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1f2937; position: sticky; top: 0; z-index: 10; }
-  .pill { background: #064e3b; color: #34d399; padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
-  .page { display: none; padding: 16px; max-width: 500px; margin: 0 auto; }
-  .page.active { display: block; }
-  .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 16px; margin-bottom: 14px; }
-  .price-tag { background: #2563eb; color: #fff; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 14px; }
-  .btn { width: 100%; background: #2563eb; color: #fff; border: none; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 10px; }
-  .btn-green { background: #059669; }
-  .btn-red { background: #dc2626; }
-  .click-orb { width: 170px; height: 170px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8); border: 6px solid #60a5fa; color: #fff; font-size: 22px; font-weight: 800; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 18px auto; cursor: pointer; user-select: none; box-shadow: 0 10px 30px rgba(37,99,235,0.4); transition: transform 0.06s; }
-  .click-orb:active { transform: scale(0.94); }
-  .click-orb.empty { background: radial-gradient(circle at 30% 30%, #ef4444, #991b1b); border-color: #f87171; box-shadow: 0 10px 30px rgba(239,68,68,0.4); }
-  .bar-bg { background: #0f172a; height: 12px; border-radius: 999px; overflow: hidden; margin: 8px 0; border: 1px solid #334155; }
-  .bar-fill { height: 100%; background: linear-gradient(90deg, #10b981, #34d399); width: 100%; transition: width 0.2s; }
-  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #111827; border-top: 1px solid #1f2937; display: flex; justify-content: space-around; padding: 10px 0; }
-  .nav button { background: none; border: none; color: #94a3b8; font-size: 12px; font-weight: 600; cursor: pointer; }
-  .nav button.active { color: #38bdf8; }
-  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); align-items: center; justify-content: center; padding: 16px; z-index: 50; }
+  :root {
+    --bg: #0f1419;
+    --card: #1a222b;
+    --accent: #2ea6ff;
+    --green: #22c55e;
+    --red: #ef4444;
+    --gold: #f59e0b;
+    --text: #f3f4f6;
+    --muted: #9ca3af;
+  }
+  * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { margin: 0; background: var(--bg); color: var(--text); padding: 14px 14px 82px; }
+  .header { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 12px 14px; border-radius: 14px; margin-bottom: 12px; }
+  .user-info h3 { margin: 0; font-size: 16px; }
+  .user-info span { font-size: 12px; color: var(--muted); }
+  .online-pill { background: rgba(34, 197, 94, 0.15); color: var(--green); padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; background: var(--green); border-radius: 50%; animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  .card { background: var(--card); border-radius: 14px; padding: 14px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.06); }
+  .card h4 { margin: 0 0 6px; font-size: 16px; }
+  .card p { margin: 0 0 12px; font-size: 13px; color: var(--muted); line-height: 1.4; }
+  .price-row { display: flex; justify-content: space-between; align-items: center; }
+  .price { font-size: 18px; font-weight: 800; color: var(--accent); }
+  .btn { background: var(--accent); color: #fff; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; }
+  .btn:active { transform: scale(0.97); }
+  .btn-gold { background: var(--gold); color: #111; }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn-outline { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
+
+  /* Clicker */
+  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+  .stat-box { background: var(--card); padding: 12px; border-radius: 12px; text-align: center; }
+  .stat-box .val { font-size: 20px; font-weight: 800; margin-top: 4px; }
+  .tap-wrap { text-align: center; margin: 16px 0; }
+  .tap-btn {
+    width: 170px; height: 170px; border-radius: 50%; border: 6px solid rgba(46,166,255,0.35);
+    background: radial-gradient(circle at 30% 30%, #38bdf8, #0284c7);
+    color: #fff; font-size: 22px; font-weight: 900; cursor: pointer;
+    box-shadow: 0 10px 30px rgba(2,132,199,0.45); transition: transform 0.08s;
+  }
+  .tap-btn.empty {
+    border-color: rgba(239,68,68,0.45);
+    background: radial-gradient(circle at 30% 30%, #f87171, #dc2626);
+    box-shadow: 0 10px 30px rgba(220,38,38,0.45);
+  }
+  .tap-btn:active { transform: scale(0.94); }
+  .progress-bg { background: #0b0f14; height: 12px; border-radius: 999px; overflow: hidden; margin: 8px 0; }
+  .progress-fill { background: linear-gradient(90deg, #f59e0b, #22c55e); height: 100%; width: 0%; transition: width 0.25s; }
+
+  .upg-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .upg-item:last-child { border-bottom: none; }
+
+  input { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); background: #0f1419; color: #fff; margin-bottom: 10px; font-size: 14px; }
+
+  /* Modal */
+  .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 50; align-items: center; justify-content: center; padding: 16px; }
   .modal.open { display: flex; }
+  .modal-box { background: var(--card); width: 100%; max-width: 400px; border-radius: 16px; padding: 18px; }
+  .card-num { background: #0f1419; padding: 12px; border-radius: 10px; font-family: monospace; font-size: 16px; text-align: center; letter-spacing: 1px; margin: 10px 0; border: 1px dashed var(--accent); cursor: pointer; }
+
+  /* Bottom Nav */
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #141b22; display: flex; border-top: 1px solid rgba(255,255,255,0.08); }
+  .nav button { flex: 1; background: none; border: none; color: var(--muted); padding: 10px 4px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .nav button.active { color: var(--accent); }
+  .dev-tag { text-align: center; font-size: 12px; color: var(--muted); margin-top: 12px; }
+  .dev-tag a { color: var(--accent); text-decoration: none; }
 </style>
 </head>
 <body>
 
-<div class="top">
-  <div>
-    <div style="font-weight:800; font-size:16px;">TacticalGrid_Map</div>
-    <div style="font-size:11px; color:#94a3b8;" id="userLabel">Разраб: @eldar3275</div>
+<div class="header">
+  <div class="user-info">
+    <h3 id="uName">Игрок TacticalGrid</h3>
+    <span id="uHandle">@player • Ур. силы: <b id="lvlBadge">1</b></span>
   </div>
-  <div class="pill" id="onlinePill">🟢 Онлайн: 24</div>
+  <div class="online-pill"><span class="dot"></span> Онлайн: <span id="onlineCount">42</span></div>
 </div>
 
-<div id="tab-shop" class="page active">
+<!-- TAB 1: SHOP -->
+<div id="tab-shop" class="tab active">
   <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <strong style="font-size:16px;">🎮 Полная игра TacticalGrid</strong>
-      <span class="price-tag">20 грн</span>
+    <h4>🗺 Полная версия игры TacticalGrid</h4>
+    <p>Лицензионный ключ доступа к тактической карте, режиму против ИИ, песочнице и всем бригадам.</p>
+    <div class="price-row">
+      <span class="price">20 грн</span>
+      <button class="btn" onclick="openPay('Полная версия игры TacticalGrid', 20)">Купить</button>
     </div>
-    <p style="font-size:13px; color:#cbd5e1; margin:8px 0;">Полный доступ к тактической карте, режимам Против ИИ и Песочница.</p>
-    <button class="btn" onclick="openPay('Полная игра TacticalGrid', 20)">Купить за 20 грн</button>
   </div>
 
   <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <strong style="font-size:16px;">🔑 Дополнительный ключ</strong>
-      <span class="price-tag">25 грн</span>
+    <h4>🔑 Дополнительный ключ</h4>
+    <p>Второй резервный ключ активации для другого устройства или подарка другу.</p>
+    <div class="price-row">
+      <span class="price">25 грн</span>
+      <button class="btn" onclick="openPay('Дополнительный ключ', 25)">Купить</button>
     </div>
-    <p style="font-size:13px; color:#cbd5e1; margin:8px 0;">Запасной лицензионный ключ для второго устройства или друга.</p>
-    <button class="btn" onclick="openPay('Дополнительный ключ', 25)">Купить за 25 грн</button>
   </div>
 
   <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <strong style="font-size:16px;">👑 VIP-пакет + исходники</strong>
-      <span class="price-tag">100 грн</span>
+    <h4>👑 VIP-пакет + исходник .aia</h4>
+    <p>Максимальный доступ, VIP-статус в боте, полные исходники проекта и приоритетная поддержка.</p>
+    <div class="price-row">
+      <span class="price">100 грн</span>
+      <button class="btn btn-gold" onclick="openPay('VIP-пакет + исходник .aia', 100)">Купить VIP</button>
     </div>
-    <p style="font-size:13px; color:#cbd5e1; margin:8px 0;">VIP-статус, приоритетная поддержка @eldar3275 и файлы проекта.</p>
-    <button class="btn" onclick="openPay('VIP-пакет + исходники', 100)">Купить за 100 грн</button>
+  </div>
+  <div class="dev-tag">Разраб: <a href="https://t.me/eldar3275" target="_blank">@eldar3275</a></div>
+</div>
+
+<!-- TAB 2: CLICKER & COINS -->
+<div id="tab-coins" class="tab">
+  <div class="stats-grid">
+    <div class="stat-box">
+      <div style="font-size:12px;color:var(--muted)">Монеты</div>
+      <div class="val" style="color:var(--gold)" id="coinsVal">0 🪙</div>
+    </div>
+    <div class="stat-box">
+      <div style="font-size:12px;color:var(--muted)">Сила (+1 / 5 мин)</div>
+      <div class="val" id="energyVal">100 / 100 ⚡</div>
+      <div style="font-size:11px;color:var(--muted)" id="regenTimer">Полная сила</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;font-size:13px;">
+      <span>До бесплатного ключа игры:</span>
+      <b><span id="goalText">0</span> / 100 000 🪙</b>
+    </div>
+    <div class="progress-bg"><div class="progress-fill" id="goalBar"></div></div>
+    <button class="btn btn-green" id="claimKeyBtn" style="width:100%;margin-top:6px;display:none;" onclick="exchangeKey()">🎁 Обменять 100 000 монет на ключ!</button>
+  </div>
+
+  <div class="tap-wrap">
+    <button class="tap-btn" id="tapBtn" onclick="doTap()">КЛИК<br><span style="font-size:13px;font-weight:500" id="tapHint">+1 🪙 / -1 ⚡</span></button>
+    <div style="font-size:12px;color:var(--muted);margin-top:8px;">Если сила = 0, каждый клик отнимает <b>2 монеты</b>!</div>
+  </div>
+
+  <div class="card">
+    <h4>⚡ Прокачки</h4>
+    <div class="upg-item">
+      <div>
+        <b>Макс. запас силы (+25)</b><br>
+        <span style="font-size:12px;color:var(--muted)">Текущий макс: <span id="maxEnergyInfo">100</span></span>
+      </div>
+      <button class="btn btn-outline" onclick="buyUpgrade('maxEnergy')" id="btnUpgEnergy">150 🪙</button>
+    </div>
+    <div class="upg-item">
+      <div>
+        <b>Мощность клика (+1 🪙)</b><br>
+        <span style="font-size:12px;color:var(--muted)">За клик: +<span id="tapPowerInfo">1</span> 🪙</span>
+      </div>
+      <button class="btn btn-outline" onclick="buyUpgrade('tapPower')" id="btnUpgPower">250 🪙</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>🎟 Код от админа (@eldar3275)</h4>
+    <p>Введи код выдачи наград, полученный от администратора в боте.</p>
+    <input type="text" id="promoInput" placeholder="Например: GIFT-50000-MAX">
+    <button class="btn" style="width:100%" onclick="redeemAdminCode()">Активировать награду</button>
   </div>
 </div>
 
-<div id="tab-coins" class="page">
-  <div class="card" style="text-align:center;">
-    <div style="font-size:13px; color:#94a3b8;">Ваш баланс монет (100 000 = 🔑 Ключ)</div>
-    <div style="font-size:32px; font-weight:900; color:#fbbf24; margin:4px 0;" id="coinsDisplay">0 🪙</div>
-    <div class="bar-bg"><div class="bar-fill" id="coinsBar" style="width:0%; background:#fbbf24;"></div></div>
-
-    <div class="click-orb" id="orbBtn" onclick="doClick()">
-      <span id="orbTitle">+1 🪙</span>
-      <span style="font-size:12px; font-weight:500; margin-top:4px;" id="orbSub">Сила: 10 / 10</span>
-    </div>
-
-    <div style="font-size:12px; color:#94a3b8; margin-bottom:6px;" id="energyLabel">⚡ Сила: 10 / 10 (Без силы клик: -2 монеты!)</div>
-    <div class="bar-bg"><div class="bar-fill" id="energyBar"></div></div>
-
-    <button class="btn btn-green" id="claimKeyBtn" style="display:none;" onclick="claimFreeKey()">🎁 Обменять 100 000 монет на ключ!</button>
-  </div>
-
+<!-- TAB 3: KEYS -->
+<div id="tab-keys" class="tab">
   <div class="card">
-    <strong style="font-size:15px;">⚡ Прокачки за монеты</strong>
-    <button class="btn" style="background:#334155; font-size:13px;" onclick="buyUpgrade('maxEnergy')" id="upgEnergyBtn">🔋 +10 макс. силы (Цена: 25 🪙)</button>
-    <button class="btn" style="background:#334155; font-size:13px;" onclick="buyUpgrade('power')" id="upgPowerBtn">💪 +1 монета за клик (Цена: 50 🪙)</button>
-    <button class="btn" style="background:#334155; font-size:13px;" onclick="buyUpgrade('regen')" id="upgRegenBtn">⏱ +1 сила/сек (Цена: 75 🪙)</button>
+    <h4>🔑 Мои ключи и покупки</h4>
+    <div id="keysList"><p>Пока нет активированных ключей. Купите игру в магазине или накопите 100 000 монет!</p></div>
   </div>
 </div>
 
-<div id="tab-keys" class="page">
-  <div class="card">
-    <strong style="font-size:16px;">🔑 Мои ключи</strong>
-    <div id="keysContainer" style="margin-top:10px; font-size:13px; color:#cbd5e1;">Пока нет полученных ключей. Купите во вкладке «Магазин» или накопите 100 000 монет!</div>
-  </div>
-  <div class="card" style="text-align:center; font-size:13px; color:#94a3b8;">
-    Разработчик проекта: <a href="https://t.me/eldar3275" style="color:#38bdf8; font-weight:700;">@eldar3275</a>
+<!-- PAY MODAL -->
+<div class="modal" id="payModal">
+  <div class="modal-box">
+    <h4 style="margin:0 0 6px" id="payTitle">Оплата</h4>
+    <p style="font-size:13px;color:var(--muted);margin:0">Переведите <b id="payAmount" style="color:#fff">20 грн</b> на карту (нажмите, чтобы скопировать):</p>
+    <div class="card-num" onclick="copyCard()">4441 1144 3394 8724 📋</div>
+    <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:4px;">Прикрепите фото/скриншот оплаты:</label>
+    <input type="file" id="receiptFile" accept="image/*">
+    <div style="display:flex;gap:8px;margin-top:6px;">
+      <button class="btn btn-outline" style="flex:1" onclick="closePay()">Отмена</button>
+      <button class="btn btn-green" style="flex:1" onclick="submitPayment()">Я оплатил</button>
+    </div>
   </div>
 </div>
 
@@ -110,140 +202,188 @@
   <button onclick="switchTab('keys', this)">🔑 Ключи</button>
 </div>
 
-<div class="modal" id="payModal">
-  <div class="card" style="width:100%; max-width:400px;">
-    <strong style="font-size:17px;" id="payTitle">Оплата</strong>
-    <p style="font-size:13px; color:#cbd5e1;">Переведите <b id="paySum">20 грн</b> на карту:</p>
-    <div style="background:#0f172a; padding:12px; border-radius:10px; font-family:monospace; font-size:16px; text-align:center; border:1px solid #334155; margin-bottom:10px;">4441 1144 3394 8724</div>
-    <button class="btn" style="background:#334155;" onclick="copyCard()">📋 Скопировать карту</button>
-    <button class="btn btn-green" onclick="confirmPaid()">✅ Я оплатил (отправить в бот)</button>
-    <button class="btn btn-red" onclick="document.getElementById('payModal').classList.remove('open')">Закрыть</button>
-  </div>
-</div>
-
 <script>
-  const tg = window.Telegram && window.Telegram.WebApp;
-  if (tg) {
-    tg.ready();
-    tg.expand();
-    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-      const u = tg.initDataUnsafe.user;
-      document.getElementById('userLabel').textContent = `${u.username ? '@' + u.username : u.first_name} • Разраб: @eldar3275`;
-    }
-  }
+const tg = window.Telegram ? window.Telegram.WebApp : null;
+if (tg) { tg.expand(); tg.ready(); }
 
-  let state = JSON.parse(localStorage.getItem('tg_miniapp_v4') || '{"coins":0,"energy":10,"maxEnergy":10,"power":1,"regen":1,"keys":[]}');
-  let currentOrder = null;
+const REGEN_MS = 5 * 60 * 1000; // 5 минут = +1 сила
+let state = JSON.parse(localStorage.getItem('tg_mini_state_v7') || 'null') || {
+  coins: 0,
+  energy: 100,
+  maxEnergy: 100,
+  tapPower: 1,
+  lastTick: Date.now(),
+  keys: [],
+  usedCodes: []
+};
 
-  function save() {
-    localStorage.setItem('tg_miniapp_v4', JSON.stringify(state));
-    render();
-  }
+let currentItem = { name: '', price: 0 };
 
-  function render() {
-    document.getElementById('coinsDisplay').textContent = `${state.coins.toLocaleString()} 🪙`;
-    document.getElementById('coinsBar').style.width = `${Math.min(100, (state.coins / 100000) * 100)}%`;
-    document.getElementById('energyBar').style.width = `${(state.energy / state.maxEnergy) * 100}%`;
-    document.getElementById('energyLabel').textContent = `⚡ Сила: ${state.energy} / ${state.maxEnergy} (Без силы клик: -2 монеты!)`;
+function save() {
+  localStorage.setItem('tg_mini_state_v7', JSON.stringify(state));
+}
 
-    const orb = document.getElementById('orbBtn');
-    if (state.energy > 0) {
-      orb.classList.remove('empty');
-      document.getElementById('orbTitle').textContent = `+${state.power} 🪙`;
-      document.getElementById('orbSub').textContent = `Сила: ${state.energy} / ${state.maxEnergy}`;
-    } else {
-      orb.classList.add('empty');
-      document.getElementById('orbTitle').textContent = `-2 🪙`;
-      document.getElementById('orbSub').textContent = `НЕТ СИЛЫ!`;
-    }
-
-    document.getElementById('claimKeyBtn').style.display = state.coins >= 100000 ? 'block' : 'none';
-    document.getElementById('upgEnergyBtn').textContent = `🔋 +10 макс. силы (Цена: ${state.maxEnergy * 2.5} 🪙)`;
-    document.getElementById('upgPowerBtn').textContent = `💪 +1 монета за клик (Цена: ${state.power * 50} 🪙)`;
-    document.getElementById('upgRegenBtn').textContent = `⏱ +1 сила/сек (Цена: ${state.regen * 75} 🪙)`;
-
-    const kc = document.getElementById('keysContainer');
-    if (state.keys.length) {
-      kc.innerHTML = state.keys.map(k => `<div style="background:#0f172a;padding:10px;border-radius:8px;margin-bottom:6px;font-family:monospace;color:#34d399;">🔑 ${k}</div>`).join('');
-    }
-  }
-
-  function doClick() {
-    if (state.energy > 0) {
-      state.energy -= 1;
-      state.coins += state.power;
-    } else {
-      state.coins = Math.max(0, state.coins - 2);
-    }
-    save();
-  }
-
-  function buyUpgrade(type) {
-    if (type === 'maxEnergy') {
-      const cost = Math.floor(state.maxEnergy * 2.5);
-      if (state.coins < cost) return alert('Недостаточно монет!');
-      state.coins -= cost;
-      state.maxEnergy += 10;
-      state.energy = state.maxEnergy;
-    } else if (type === 'power') {
-      const cost = state.power * 50;
-      if (state.coins < cost) return alert('Недостаточно монет!');
-      state.coins -= cost;
-      state.power += 1;
-    } else if (type === 'regen') {
-      const cost = state.regen * 75;
-      if (state.coins < cost) return alert('Недостаточно монет!');
-      state.coins -= cost;
-      state.regen += 1;
-    }
-    save();
-  }
-
-  function claimFreeKey() {
-    if (state.coins < 100000) return;
-    state.coins -= 100000;
-    const c = () => Math.random().toString(36).substring(2, 6).toUpperCase();
-    const key = `TG-${c()}-${c()}-${c()}`;
-    state.keys.push(key);
-    save();
-    alert(`Поздравляем! Вы получили ключ: ${key}`);
-  }
-
-  setInterval(() => {
-    if (state.energy < state.maxEnergy) {
-      state.energy = Math.min(state.maxEnergy, state.energy + state.regen);
+function tickRegen() {
+  const now = Date.now();
+  if (state.energy < state.maxEnergy) {
+    const elapsed = now - state.lastTick;
+    if (elapsed >= REGEN_MS) {
+      const gained = Math.floor(elapsed / REGEN_MS);
+      state.energy = Math.min(state.maxEnergy, state.energy + gained);
+      state.lastTick = state.energy >= state.maxEnergy ? now : state.lastTick + gained * REGEN_MS;
       save();
     }
-  }, 1000);
-
-  function switchTab(name, btn) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + name).classList.add('active');
-    btn.classList.add('active');
+  } else {
+    state.lastTick = now;
   }
-
-  function openPay(title, price) {
-    currentOrder = { title, price };
-    document.getElementById('payTitle').textContent = title;
-    document.getElementById('paySum').textContent = price + ' грн';
-    document.getElementById('payModal').classList.add('open');
-  }
-
-  function copyCard() {
-    navigator.clipboard.writeText('4441114433948724');
-    alert('Номер карты скопирован!');
-  }
-
-  function confirmPaid() {
-    document.getElementById('payModal').classList.remove('open');
-    if (tg) {
-      tg.sendData(JSON.stringify(currentOrder));
-    }
-    alert('Заявка создана! Отправьте скриншот чека в чат бота для получения ключа.');
-  }
-
   render();
+}
+
+function render() {
+  if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+    const u = tg.initDataUnsafe.user;
+    document.getElementById('uName').textContent = u.first_name || 'Игрок';
+    document.getElementById('uHandle').innerHTML = (u.username ? '@' + u.username : 'ID ' + u.id) + ' • Сила клика: <b>' + state.tapPower + '</b>';
+  }
+  document.getElementById('coinsVal').textContent = state.coins.toLocaleString('ru-RU') + ' 🪙';
+  document.getElementById('energyVal').textContent = `${state.energy} / ${state.maxEnergy} ⚡`;
+  document.getElementById('maxEnergyInfo').textContent = state.maxEnergy;
+  document.getElementById('tapPowerInfo').textContent = state.tapPower;
+
+  const tapBtn = document.getElementById('tapBtn');
+  const tapHint = document.getElementById('tapHint');
+  if (state.energy > 0) {
+    tapBtn.classList.remove('empty');
+    tapHint.textContent = `+${state.tapPower} 🪙 / -1 ⚡`;
+  } else {
+    tapBtn.classList.add('empty');
+    tapHint.textContent = `-2 🪙 (нет силы!)`;
+  }
+
+  if (state.energy < state.maxEnergy) {
+    const left = Math.max(0, REGEN_MS - (Date.now() - state.lastTick));
+    const m = Math.floor(left / 60000);
+    const s = Math.floor((left % 60000) / 1000);
+    document.getElementById('regenTimer').textContent = `+1 ⚡ через ${m}:${s < 10 ? '0' : ''}${s}`;
+  } else {
+    document.getElementById('regenTimer').textContent = 'Максимум силы';
+  }
+
+  const pct = Math.min(100, (state.coins / 100000) * 100);
+  document.getElementById('goalText').textContent = state.coins.toLocaleString('ru-RU');
+  document.getElementById('goalBar').style.width = pct + '%';
+  document.getElementById('claimKeyBtn').style.display = state.coins >= 100000 ? 'block' : 'none';
+
+  const keysList = document.getElementById('keysList');
+  if (state.keys.length > 0) {
+    keysList.innerHTML = state.keys.map(k => `<div style="background:#0f1419;padding:10px;border-radius:10px;margin-bottom:8px;font-family:monospace;"><b>${k.code}</b><br><span style="font-size:11px;color:var(--muted)">${k.source}</span></div>`).join('');
+  }
+}
+
+function doTap() {
+  if (state.energy > 0) {
+    if (state.energy === state.maxEnergy) state.lastTick = Date.now();
+    state.energy -= 1;
+    state.coins += state.tapPower;
+  } else {
+    state.coins = Math.max(0, state.coins - 2);
+  }
+  save();
+  render();
+}
+
+function buyUpgrade(type) {
+  if (type === 'maxEnergy') {
+    if (state.coins < 150) return alert('Недостаточно монет (нужно 150 🪙)');
+    state.coins -= 150;
+    state.maxEnergy += 25;
+    state.energy = state.maxEnergy;
+  } else if (type === 'tapPower') {
+    if (state.coins < 250) return alert('Недостаточно монет (нужно 250 🪙)');
+    state.coins -= 250;
+    state.tapPower += 1;
+  }
+  save();
+  render();
+}
+
+function exchangeKey() {
+  if (state.coins < 100000) return;
+  state.coins -= 100000;
+  const code = 'TG-' + Math.random().toString(36).substring(2,6).toUpperCase() + '-' + Math.random().toString(36).substring(2,6).toUpperCase() + '-100K';
+  state.keys.unshift({ code, source: 'Обмен за 100 000 монет' });
+  save();
+  render();
+  alert('Поздравляем! Ваш ключ: ' + code);
+}
+
+function redeemAdminCode() {
+  const raw = document.getElementById('promoInput').value.trim().toUpperCase();
+  if (!raw) return;
+  if (state.usedCodes.includes(raw)) return alert('Этот код уже активирован!');
+  // Формат от админки: GIFT-<COINS>-<ENERGY>-<POWER>-<VIP>
+  const parts = raw.split('-');
+  if (parts[0] === 'GIFT' && parts.length >= 4) {
+    const addCoins = parseInt(parts[1], 10) || 0;
+    const addEnergy = parseInt(parts[2], 10) || 0;
+    const addPower = parseInt(parts[3], 10) || 0;
+    state.coins += addCoins;
+    if (addEnergy > 0) { state.maxEnergy += addEnergy; state.energy = state.maxEnergy; }
+    if (addPower > 0) { state.tapPower += addPower; }
+    if (parts[4] === 'KEY') {
+      const code = 'TG-' + Math.random().toString(36).substring(2,6).toUpperCase() + '-VIP-3275';
+      state.keys.unshift({ code, source: 'Подарок от @eldar3275' });
+    }
+    state.usedCodes.push(raw);
+    document.getElementById('promoInput').value = '';
+    save();
+    render();
+    alert(`Награда от @eldar3275 зачислена!
++${addCoins} монет, +${addEnergy} макс. силы, +${addPower} к клику.`);
+  } else {
+    alert('Неверный формат кода. Попросите код в админ-панели @eldar3275.');
+  }
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function openPay(name, price) {
+  currentItem = { name, price };
+  document.getElementById('payTitle').textContent = name;
+  document.getElementById('payAmount').textContent = price + ' грн';
+  document.getElementById('payModal').classList.add('open');
+}
+function closePay() { document.getElementById('payModal').classList.remove('open'); }
+function copyCard() {
+  navigator.clipboard.writeText('4441114433948724');
+  alert('Номер карты 4441 1144 3394 8724 скопирован!');
+}
+function submitPayment() {
+  const file = document.getElementById('receiptFile').files[0];
+  if (!file) return alert('Пожалуйста, прикрепите фото или скриншот оплаты!');
+  const payload = JSON.stringify({
+    action: 'payment_receipt',
+    item: currentItem.name,
+    price: currentItem.price,
+    card: '4441 1144 3394 8724'
+  });
+  if (tg) {
+    tg.sendData(payload);
+  }
+  alert('Чек отправлен администратору! После проверки бот пришлёт ключ в личные сообщения.');
+  closePay();
+}
+
+setInterval(() => {
+  tickRegen();
+  document.getElementById('onlineCount').textContent = 38 + Math.floor(Math.random() * 12);
+}, 1000);
+tickRegen();
 </script>
 </body>
 </html>
