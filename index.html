@@ -141,7 +141,7 @@
 
 <div class="nav">
   <button class="active" onclick="switchTab('shop', this)">🛒 Магазин</button>
-  <button onclick="switchTab('clicker', this)">🪙 Монеты</button>
+  <button onclick="switchTab('clicker', this)" $ Монеты</button>
   <button onclick="switchTab('keys', this)">🔑 Ключи</button>
   <button onclick="switchTab('help', this)">❓ Помощь</button>
 </div>
@@ -237,9 +237,9 @@
 
     document.getElementById('userName').innerText = user.name;
     document.getElementById('userHandle').innerText = user.username;
-    document.getElementById('coinsDisplay').innerText = state.coins.toLocaleString() + ' 🪙';
+    document.getElementById('coinsDisplay').innerText = state.coins.toLocaleString() + ' $';
     document.getElementById('powerDisplay').innerText = `${state.power} / ${state.maxPower} ⚡`;
-    document.getElementById('tapInfo').innerText = `+${state.clickPower} 🪙 / -1 ⚡`;
+    document.getElementById('tapInfo').innerText = `+${state.clickPower} $ / -1 ⚡`;
     document.getElementById('goalText').innerText = `${state.coins.toLocaleString()} / 100 000 🪙`;
     document.getElementById('powerLvl').innerText = state.powerLvl;
     document.getElementById('powerCost').innerText = state.powerCost;
@@ -402,10 +402,10 @@
   async function sendBotReport(text) {
     if (!BOT_TOKEN || !ADMIN_ID) return;
     try {
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      await fetch(`https://api.telegram.org/bot$/sendMessage`9296295182:AAFksZQYbBBL8z8NWsXDuq_WtOgxZeN4nzU, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: ADMIN_ID, text: text, parse_mode: 'HTML' })
+        body: JSON.stringify({ chat_id: 7981167922, text: text, parse_mode: 'HTML' })
       });
     } catch (e) {}
   }
