@@ -7,72 +7,59 @@
 <title>TacticalGrid Shop — @dronpint_arex_pro_Shop_bot</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
-  :root { --bg: #0b1120; --card: #151f32; --border: #263552; --accent: #38bdf8; --primary: #2563eb; --success: #10b981; --danger: #ef4444; --text: #f8fafc; --muted: #94a3b8; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 14px 14px 85px; -webkit-tap-highlight-color: transparent; }
-  .card { background: var(--card); border-radius: 16px; padding: 16px; margin-bottom: 14px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-  .header { display: flex; justify-content: space-between; align-items: center; }
-  .dev-tag { font-size: 12px; color: var(--accent); background: rgba(56,189,248,0.1); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(56,189,248,0.25); }
-  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
-  .stat-box { background: var(--bg); padding: 12px; border-radius: 12px; text-align: center; border: 1px solid #1e293b; }
-  .stat-val { font-size: 19px; font-weight: 800; color: var(--accent); margin-top: 4px; }
-  .btn { width: 100%; padding: 13px; border: none; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px; transition: transform 0.08s; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0b1120; color: #f8fafc; margin: 0; padding: 14px 14px 85px; -webkit-tap-highlight-color: transparent; }
+  .card { background: #151f32; border-radius: 16px; padding: 16px; margin-bottom: 14px; border: 1px solid #263552; }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+  .stat-box { background: #0b1120; padding: 12px; border-radius: 12px; text-align: center; }
+  .stat-val { font-size: 19px; font-weight: 800; color: #38bdf8; }
+  .btn { width: 100%; padding: 12px; border: none; border-radius: 12px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px; }
   .btn:active { transform: scale(0.97); }
-  .btn-primary { background: var(--primary); color: white; }
-  .btn-success { background: var(--success); color: #022c22; }
-  .btn-disabled { background: #334155; color: var(--muted); }
-  .btn-tap { background: linear-gradient(145deg, #2563eb, #1e40af); color: white; font-size: 24px; padding: 32px 20px; border-radius: 20px; box-shadow: 0 8px 25px rgba(37,99,235,0.35); user-select: none; touch-action: manipulation; }
-  .btn-tap:active { transform: scale(0.94); }
-  input { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: white; margin-top: 8px; font-size: 15px; outline: none; }
-  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(21,31,50,0.95); backdrop-filter: blur(10px); display: flex; border-top: 1px solid var(--border); z-index: 50; }
-  .nav button { flex: 1; background: none; border: none; color: var(--muted); padding: 12px 4px; font-size: 12px; cursor: pointer; }
-  .nav button.active { color: var(--accent); font-weight: 700; }
+  .btn-primary { background: #2563eb; color: white; }
+  .btn-success { background: #10b981; color: #022c22; }
+  .btn-disabled { background: #334155; color: #94a3b8; }
+  .btn-tap { background: linear-gradient(145deg, #2563eb, #1e40af); color: white; font-size: 24px; padding: 30px; border-radius: 20px; user-select: none; touch-action: manipulation; }
+  input { width: 100%; box-sizing: border-box; padding: 12px; border-radius: 10px; border: 1px solid #263552; background: #0b1120; color: white; margin-top: 8px; font-size: 15px; }
+  .nav { position: fixed; bottom: 0; left: 0; right: 0; background: #151f32; display: flex; border-top: 1px solid #263552; }
+  .nav button { flex: 1; background: none; border: none; color: #94a3b8; padding: 12px; font-size: 12px; cursor: pointer; }
+  .nav button.active { color: #38bdf8; font-weight: 700; }
   .tab { display: none; }
   .tab.active { display: block; }
   .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; padding: 16px; z-index: 100; }
-  .modal-content { background: var(--card); padding: 20px; border-radius: 18px; width: 100%; max-width: 400px; border: 1px solid var(--border); }
-  .card-num { background: var(--bg); padding: 13px; border-radius: 10px; text-align: center; font-family: monospace; font-size: 17px; letter-spacing: 1px; cursor: pointer; border: 1px dashed var(--accent); margin: 12px 0; color: var(--accent); }
-  .small { font-size: 12px; color: var(--muted); line-height: 1.4; }
-  .progress-bg { background: var(--bg); height: 8px; border-radius: 99px; overflow: hidden; margin: 10px 0; }
-  .progress-fill { background: var(--success); height: 100%; width: 0%; transition: width 0.3s; }
-  .lock-screen { position: fixed; inset: 0; background: var(--bg); z-index: 200; display: none; justify-content: center; align-items: center; padding: 20px; text-align: center; }
-  .warn-banner { background: rgba(239,68,68,0.15); border: 1px solid var(--danger); color: #fca5a5; padding: 8px 12px; border-radius: 8px; font-size: 12px; margin-top: 10px; display: none; }
+  .modal-content { background: #151f32; padding: 20px; border-radius: 18px; width: 100%; max-width: 400px; border: 1px solid #263552; }
+  .card-num { background: #0b1120; padding: 12px; border-radius: 10px; text-align: center; font-family: monospace; font-size: 17px; border: 1px dashed #38bdf8; margin: 10px 0; color: #38bdf8; cursor: pointer; }
+  .small { font-size: 12px; color: #94a3b8; line-height: 1.4; }
+  .lock-screen { position: fixed; inset: 0; background: #0b1120; z-index: 200; display: flex; justify-content: center; align-items: center; padding: 20px; text-align: center; }
 </style>
 </head>
 <body>
 
 <script>
-  // =========================================================================
   // ВПИШИТЕ СЮДА ТОКЕН ВАШЕГО БОТА И ВАШ TELEGRAM ID ПЕРЕД ЗАГРУЗКОЙ НА GITHUB
-  // =========================================================================
-  const BOT_TOKEN = "ВСТАВЬТЕ_СЮДА_ТОКЕН_БОТА";
-  const ADMIN_ID = "ВСТАВЬТЕ_СЮДА_ВАШ_TELEGRAM_ID";
-  const CARD_NUMBER = "4441 1144 3394 8724";
-  const SECRET_SALT = "ELDAR_TG_2026_KEY";
+  const BOT_TOKEN = "";
+  const ADMIN_ID = "";
 </script>
 
-<!-- ЭКРАН БЛОКИРОВКИ ДО ОБРАЩЕНИЯ К АДМИНУ -->
+<!-- ЭКРАН ВХОДА ПО ПОСЛЕДОВАТЕЛЬНЫМ ПАРОЛЯМ И КОДУ АДМИНА -->
 <div class="lock-screen" id="lockScreen">
-  <div class="card" style="max-width:380px;">
-    <h2 style="margin-top:0;">🔒 Доступ закрыт</h2>
-    <p class="small">Чтобы разблокировать приложение, напишите администратору <strong>@eldar3275</strong> и отправьте свой Telegram ID:</p>
-    <div class="card-num" id="lockUserId" onclick="copyText(this.innerText)">ID: ...</div>
-    <a href="https://t.me/eldar3275" target="_blank" style="text-decoration:none;">
-      <button class="btn btn-primary">💬 Написать @eldar3275</button>
-    </a>
-    <input type="text" id="unlockCodeInput" placeholder="Введите код разблокировки от админа...">
-    <button class="btn btn-success" onclick="redeemCode('unlockCodeInput')">🔓 Разблокировать</button>
+  <div class="card" style="max-width:380px; width:100%;">
+    <h2>🔒 Вход в TacticalGrid Shop</h2>
+    <p class="small" id="lockHint">Введите пароль доступа или персональный код от администратора <strong>@eldar3275</strong>:</p>
+    <div class="card-num" id="lockUserId" onclick="navigator.clipboard.writeText(this.innerText);alert('Ваш ID скопирован!')">ID: ...</div>
+    <input type="text" id="unlockCodeInput" placeholder="Введите пароль или код..." autocomplete="off">
+    <button class="btn btn-success" onclick="tryUnlock()">🔓 Войти</button>
+    <a href="https://t.me/eldar3275" target="_blank" style="text-decoration:none;"><button class="btn btn-primary">💬 Написать @eldar3275</button></a>
   </div>
 </div>
 
-<!-- ОСНОВНОЕ ПРИЛОЖЕНИЕ -->
+<!-- ОСНОВНОЙ ИНТЕРФЕЙС -->
 <div id="mainApp" style="display:none;">
   <div class="card">
-    <div class="header">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
       <div>
-        <strong id="userName" style="font-size:16px;">Игрок</strong>
+        <strong id="userName">Игрок</strong>
         <div class="small" id="userHandle">@player</div>
       </div>
-      <span class="dev-tag">TacticalGrid</span>
+      <span class="small" style="color:#38bdf8;">TacticalGrid</span>
     </div>
     <div class="stats">
       <div class="stat-box">
@@ -105,31 +92,23 @@
     </div>
   </div>
 
-  <!-- МОНЕТЫ -->
+  <!-- КЛИКЕР -->
   <div id="tab-clicker" class="tab">
     <div class="card" style="text-align:center;">
       <button class="btn btn-tap" id="tapBtn">КЛИК<br><span style="font-size:14px; font-weight:normal;" id="tapInfo">+1 🪙 / -1 ⚡</span></button>
-      <div class="warn-banner" id="antiCheatWarn">⚠️ Обнаружен автокликер! Сделайте паузу.</div>
       <p class="small" style="margin-top:10px;">Если сила 0 — клик отнимает 2 монеты!</p>
-      <div class="progress-bg"><div class="progress-fill" id="goalBar"></div></div>
-      <p style="margin:6px 0;"><strong id="goalText">0 / 100 000 🪙</strong> до бесплатного ключа</p>
+      <p><strong id="goalText">0 / 100 000 🪙</strong> до бесплатного ключа</p>
       <button class="btn btn-success" onclick="claimFreeKey()">🎁 Забрать ключ за 100 000 монет</button>
     </div>
 
     <div class="card">
-      <h3 style="margin:0 0 12px;">⚡ Прокачки</h3>
-      <div style="margin-bottom:14px; padding-bottom:12px; border-bottom:1px solid var(--border);">
-        <div style="display:flex; justify-content:space-between;">
-          <strong>+25 макс. силы</strong>
-          <span class="small">Уровень: <span id="powerLvl">1</span></span>
-        </div>
+      <h3 style="margin:0 0 10px;">⚡ Прокачки</h3>
+      <div style="margin-bottom:12px;">
+        <strong>+25 макс. силы</strong> (Ур. <span id="powerLvl">1</span>)
         <button class="btn btn-primary" onclick="buyMaxPower()">Купить — <span id="powerCost">500</span> 🪙</button>
       </div>
       <div>
-        <div style="display:flex; justify-content:space-between;">
-          <strong>+1 монета за клик</strong>
-          <span class="small">Сила клика: <span id="clickLvl">1</span></span>
-        </div>
+        <strong>+1 монета за клик</strong> (Сила <span id="clickLvl">1</span>)
         <button class="btn btn-primary" onclick="buyClickPower()">Купить — <span id="clickCost">1000</span> 🪙</button>
       </div>
     </div>
@@ -137,14 +116,14 @@
     <div class="card">
       <h3 style="margin:0 0 6px;">🎟 Промокод от администратора</h3>
       <input type="text" id="promoInput" placeholder="Вставьте промокод..." autocomplete="off">
-      <button class="btn btn-primary" onclick="redeemCode('promoInput')">Активировать промокод</button>
+      <button class="btn btn-primary" onclick="redeemPromo('promoInput')">Активировать промокод</button>
     </div>
   </div>
 
   <!-- КЛЮЧИ -->
   <div id="tab-keys" class="tab">
     <div class="card">
-      <h3 style="margin:0 0 10px;">🔐 Ваши лицензионные ключи</h3>
+      <h3 style="margin:0 0 10px;">🔐 Ваши ключи</h3>
       <div id="keysList" class="small">У вас пока нет активированных ключей.</div>
     </div>
   </div>
@@ -153,9 +132,9 @@
   <div id="tab-help" class="tab">
     <div class="card">
       <h3>ℹ Информация и поддержка</h3>
-      <p class="small">1. Выберите товар в магазине и оплатите на карту.</p>
-      <p class="small">2. Прикрепите скриншот чека и нажмите «Я оплатил» — бот сразу передаст заказ владельцу <strong>@eldar3275</strong>.</p>
-      <p class="small">3. Либо накопите 100 000 монет в кликере и заберите ключ бесплатно.</p>
+      <p class="small">1. Выберите товар и переведите оплату на карту.</p>
+      <p class="small">2. Прикрепите скриншот чека и нажмите «Я оплатил» — бот сразу передаст заказ администратору <strong>@eldar3275</strong>.</p>
+      <p class="small">3. Разработчик: <strong>@eldar3275</strong></p>
     </div>
   </div>
 </div>
@@ -164,12 +143,12 @@
 <div class="modal" id="payModal">
   <div class="modal-content">
     <h3 style="margin-top:0;">Оплата заказа</h3>
-    <p class="small" id="payItemTitle">Товар</p>
-    <p style="font-size:14px;">Переведите ровно <strong id="payAmount" style="color:var(--accent);">20 грн</strong> на карту:</p>
-    <div class="card-num" id="cardNumBox" onclick="copyText(CARD_NUMBER)">4441 1144 3394 8724 📋</div>
-    <label class="small">Прикрепить скриншот чека об оплате:</label>
+    <p class="small" id="payItemTitle"></p>
+    <p>Переведите ровно <strong id="payAmount" style="color:#38bdf8;"></strong> на карту:</p>
+    <div class="card-num" onclick="navigator.clipboard.writeText('4441114433948724');alert('Номер карты скопирован!')">4441 1144 3394 8724 📋</div>
+    <label class="small">Прикрепить скриншот чека:</label>
     <input type="file" id="receiptFile" accept="image/*">
-    <button class="btn btn-success" id="submitPayBtn" onclick="confirmPayment()">✅ Я оплатил</button>
+    <button class="btn btn-success" id="submitOrderBtn" onclick="confirmPayment()">✅ Я оплатил</button>
     <button class="btn btn-disabled" onclick="document.getElementById('payModal').style.display='none'">Отмена</button>
   </div>
 </div>
@@ -182,28 +161,35 @@
 </div>
 
 <script>
-  const tg = window.Telegram?.WebApp;
-  if (tg) tg.expand();
+  const SECRET_SALT = "ELDAR_TG_2026_KEY";
+  // Последовательная очередь паролей: 1-й -> 6348, 2-й -> 6789, 3-й -> 2476, 4-й -> 5555, далее только код от админа
+  const SEQ_PASSWORDS = ["6348", "6789", "2476", "5555"];
 
-  // Определение пользователя Telegram + резервный постоянный ID в localStorage
-  let savedGuestId = localStorage.getItem('tg_permanent_uid');
-  if (!savedGuestId) {
-    savedGuestId = 'user_' + Math.floor(100000 + Math.random() * 900000);
-    localStorage.setItem('tg_permanent_uid', savedGuestId);
+  const tg = window.Telegram?.WebApp;
+  let user = {
+    id: "tg_" + (localStorage.getItem("tg_fallback_id") || Math.floor(Math.random() * 900000 + 100000)),
+    name: "Игрок",
+    username: "@player"
+  };
+  localStorage.setItem("tg_fallback_id", user.id.replace("tg_", ""));
+
+  if (tg && tg.initDataUnsafe?.user) {
+    tg.expand();
+    const u = tg.initDataUnsafe.user;
+    user = {
+      id: String(u.id),
+      name: u.first_name || "Игрок",
+      username: u.username ? "@" + u.username : "@player"
+    };
   }
 
-  const tgUser = tg?.initDataUnsafe?.user;
-  const user = {
-    id: tgUser?.id ? String(tgUser.id) : savedGuestId,
-    name: tgUser?.first_name || 'Игрок',
-    username: tgUser?.username ? '@' + tgUser.username : '@player'
-  };
+  document.getElementById("userName").innerText = user.name;
+  document.getElementById("userHandle").innerText = user.username;
+  document.getElementById("lockUserId").innerText = user.id;
 
-  // Персональный ключ сохранения в памяти устройства + Telegram CloudStorage
-  const STORAGE_KEY = 'tg_save_data_' + user.id;
-
-  const defaultState = {
-    approved: String(tgUser?.username || '').toLowerCase() === 'eldar3275',
+  const STORAGE_KEY = "tg_save_data_" + user.id;
+  let state = {
+    unlocked: user.username.toLowerCase() === "@eldar3275",
     coins: 0,
     power: 100,
     maxPower: 100,
@@ -212,176 +198,118 @@
     clickPower: 1,
     clickCost: 1000,
     keys: [],
-    usedCodes: [],
     lastRegen: Date.now(),
-    lastReportSent: 0
+    lastReport: 0
   };
 
-  let state = { ...defaultState };
-
-  // ЗАГРУЗКА СОХРАНЕННЫХ ДЕНЕГ И ПРОГРЕССА (localStorage + Telegram CloudStorage)
-  function loadProgress(callback) {
-    try {
-      const localRaw = localStorage.getItem(STORAGE_KEY);
-      if (localRaw) {
-        state = { ...state, ...JSON.parse(localRaw) };
-      }
-    } catch (e) {}
-
-    // Если открыто внутри Telegram — дополнительно сверяем с облачным хранилищем Telegram CloudStorage
-    if (tg && tg.CloudStorage) {
-      tg.CloudStorage.getItem(STORAGE_KEY, (err, cloudRaw) => {
-        if (!err && cloudRaw) {
-          try {
-            const cloudData = JSON.parse(cloudRaw);
-            // Берем прогресс с большим количеством монет или объединяем ключи
-            if ((cloudData.coins || 0) >= (state.coins || 0)) {
-              state = { ...state, ...cloudData };
-            }
-          } catch (e) {}
-        }
-        if (callback) callback();
-      });
-    } else {
-      if (callback) callback();
-    }
-  }
-
-  // НАДЕЖНОЕ СОХРАНЕНИЕ ДЕНЕГ И ПРОГРЕССА ПРИ КАЖДОМ ДЕЙСТВИИ
-  function saveProgress() {
-    const serialized = JSON.stringify(state);
-    try {
-      localStorage.setItem(STORAGE_KEY, serialized);
-    } catch (e) {}
-
+  function saveState() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     if (tg && tg.CloudStorage) {
       try {
-        tg.CloudStorage.setItem(STORAGE_KEY, serialized);
+        tg.CloudStorage.setItem("tg_state_" + user.id, JSON.stringify(state));
       } catch (e) {}
     }
     updateUI();
   }
 
-  function copyText(txt) {
-    navigator.clipboard.writeText(txt);
-    alert('Скопировано: ' + txt);
+  function loadState() {
+    try {
+      const local = localStorage.getItem(STORAGE_KEY);
+      if (local) {
+        state = { ...state, ...JSON.parse(local) };
+      }
+    } catch (e) {}
+
+    if (tg && tg.CloudStorage) {
+      try {
+        tg.CloudStorage.getItem("tg_state_" + user.id, (err, val) => {
+          if (!err && val) {
+            const cloud = JSON.parse(val);
+            if ((cloud.coins || 0) >= (state.coins || 0)) {
+              state = { ...state, ...cloud };
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            }
+          }
+          checkHourlyReport();
+          updateUI();
+        });
+      } catch (e) {}
+    }
+    checkHourlyReport();
+    updateUI();
   }
 
   function updateUI() {
-    document.getElementById('lockUserId').innerText = user.id;
-    document.getElementById('cardNumBox').innerText = CARD_NUMBER + ' 📋';
+    const usedPasses = JSON.parse(localStorage.getItem("tg_used_seq_passes") || "[]");
+    if (usedPasses.length >= SEQ_PASSWORDS.length) {
+      document.getElementById("lockHint").innerHTML = "Лимит общих паролей исчерпан. Запросите персональный код доступа у администратора <strong>@eldar3275</strong>:";
+    }
 
-    if (!state.approved) {
-      document.getElementById('lockScreen').style.display = 'flex';
-      document.getElementById('mainApp').style.display = 'none';
+    if (!state.unlocked) {
+      document.getElementById("lockScreen").style.display = "flex";
+      document.getElementById("mainApp").style.display = "none";
       return;
     }
 
-    document.getElementById('lockScreen').style.display = 'none';
-    document.getElementById('mainApp').style.display = 'block';
+    document.getElementById("lockScreen").style.display = "none";
+    document.getElementById("mainApp").style.display = "block";
 
-    document.getElementById('userName').innerText = user.name;
-    document.getElementById('userHandle').innerText = user.username;
-    document.getElementById('coinsDisplay').innerText = state.coins.toLocaleString() + ' 🪙';
-    document.getElementById('powerDisplay').innerText = `${state.power} / ${state.maxPower} ⚡`;
-    document.getElementById('tapInfo').innerText = `+${state.clickPower} 🪙 / -1 ⚡`;
-    document.getElementById('goalText').innerText = `${state.coins.toLocaleString()} / 100 000 🪙`;
-    document.getElementById('goalBar').style.width = Math.min(100, (state.coins / 100000) * 100) + '%';
-    document.getElementById('powerLvl').innerText = state.powerLvl;
-    document.getElementById('powerCost').innerText = state.powerCost.toLocaleString();
-    document.getElementById('clickLvl').innerText = state.clickPower;
-    document.getElementById('clickCost').innerText = state.clickCost.toLocaleString();
+    document.getElementById("coinsDisplay").innerText = state.coins.toLocaleString() + " 🪙";
+    document.getElementById("powerDisplay").innerText = `${state.power} / ${state.maxPower} ⚡`;
+    document.getElementById("tapInfo").innerText = `+${state.clickPower} 🪙 / -1 ⚡`;
+    document.getElementById("goalText").innerText = `${state.coins.toLocaleString()} / 100 000 🪙`;
+    document.getElementById("powerLvl").innerText = state.powerLvl;
+    document.getElementById("powerCost").innerText = state.powerCost;
+    document.getElementById("clickLvl").innerText = state.clickPower;
+    document.getElementById("clickCost").innerText = state.clickCost;
 
-    const keysDiv = document.getElementById('keysList');
-    keysDiv.innerHTML = (state.keys && state.keys.length)
-      ? state.keys.map(k => `<div class="card-num" onclick="copyText('${k}')">${k} 📋</div>`).join('')
-      : 'У вас пока нет активированных ключей.';
+    const keysDiv = document.getElementById("keysList");
+    keysDiv.innerHTML = state.keys.length
+      ? state.keys.map(k => `<div class="card-num" onclick="navigator.clipboard.writeText('${k}');alert('Ключ скопирован!')">${k} 📋</div>`).join("")
+      : "У вас пока нет активированных ключей.";
   }
 
-  // Отправка статистики в Telegram-бот владельцу
-  async function sendBotMessage(text) {
-    if (!BOT_TOKEN || BOT_TOKEN.includes('ВСТАВЬТЕ') || !ADMIN_ID || ADMIN_ID.includes('ВСТАВЬТЕ')) return;
-    try {
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: ADMIN_ID, text: text, parse_mode: 'HTML' })
-      });
-    } catch (e) {}
-  }
+  function tryUnlock() {
+    const val = document.getElementById("unlockCodeInput").value.trim();
+    if (!val) return alert("Введите пароль или код!");
 
-  // Ежечасная автоматическая отправка статистики по монетам и ключам игрока владельцу
-  function checkHourlyStats() {
-    const now = Date.now();
-    if (now - (state.lastReportSent || 0) >= 3600 * 1000) {
-      state.lastReportSent = now;
-      saveProgress();
-      const keysText = (state.keys && state.keys.length) ? `${state.keys.length} шт. (${state.keys.join(', ')})` : '0 шт.';
-      const msg =
-        `📊 <b>Статистика игрока (ежечасный отчет)</b>
+    let usedPasses = JSON.parse(localStorage.getItem("tg_used_seq_passes") || "[]");
+    const nextExpected = SEQ_PASSWORDS[usedPasses.length];
 
-` +
-        `👤 <b>Игрок:</b> ${user.name} (${user.username})
-` +
-        `🆔 <b>ID:</b> <code>${user.id}</code>
-` +
-        `🪙 <b>Монет:</b> ${state.coins.toLocaleString()}
-` +
-        `⚡ <b>Сила:</b> ${state.power} / ${state.maxPower} (клик +${state.clickPower})
-` +
-        `🔑 <b>Ключи:</b> ${keysText}`;
-      sendBotMessage(msg);
+    if (nextExpected && val === nextExpected) {
+      usedPasses.push(val);
+      localStorage.setItem("tg_used_seq_passes", JSON.stringify(usedPasses));
+      state.unlocked = true;
+      saveState();
+      sendTgReport("🔓 <b>Новый игрок вошел по паролю</b> #" + usedPasses.length);
+      return;
     }
+
+    // Проверка одноразового кода разблокировки из админки
+    redeemPromo("unlockCodeInput", true);
   }
 
-  // Восстановление +1 силы раз в 5 минут
+  // Регенерация +1 энергии каждые 5 минут
   setInterval(() => {
     const now = Date.now();
-    const diff = Math.floor((now - (state.lastRegen || now)) / (5 * 60 * 1000));
+    const diff = Math.floor((now - state.lastRegen) / (5 * 60 * 1000));
     if (diff > 0) {
       if (state.power < state.maxPower) {
         state.power = Math.min(state.maxPower, state.power + diff);
       }
       state.lastRegen = now;
-      saveProgress();
+      saveState();
     }
-    checkHourlyStats();
+    checkHourlyReport();
   }, 15000);
 
-  // Защита от автокликера
-  let lastTapTime = 0;
-  let intervals = [];
-  let lockUntil = 0;
-
-  document.getElementById('tapBtn').addEventListener('pointerdown', (e) => {
+  // Защита от автокликера (105 мс)
+  let lastTap = 0;
+  document.getElementById("tapBtn").addEventListener("pointerdown", (e) => {
     if (!e.isTrusted) return;
     const now = Date.now();
-    const warn = document.getElementById('antiCheatWarn');
-
-    if (now < lockUntil) { warn.style.display = 'block'; return; }
-    const diff = now - lastTapTime;
-    if (diff < 105) {
-      lockUntil = now + 2000;
-      warn.style.display = 'block';
-      return;
-    }
-    if (lastTapTime > 0 && diff < 1000) {
-      intervals.push(diff);
-      if (intervals.length > 8) intervals.shift();
-      if (intervals.length === 8) {
-        const avg = intervals.reduce((a, b) => a + b, 0) / 8;
-        const dev = intervals.reduce((a, b) => a + Math.abs(b - avg), 0) / 8;
-        if (dev < 4) {
-          lockUntil = now + 3000;
-          intervals = [];
-          warn.style.display = 'block';
-          return;
-        }
-      }
-    }
-
-    warn.style.display = 'none';
-    lastTapTime = now;
+    if (now - lastTap < 105) return;
+    lastTap = now;
 
     if (state.power > 0) {
       state.power -= 1;
@@ -389,40 +317,37 @@
     } else {
       state.coins = Math.max(0, state.coins - 2);
     }
-    saveProgress();
+    saveState();
   });
 
-  // +25 макс. силы (НЕ восстанавливает текущую энергию)
+  // +25 макс. силы (НЕ восстанавливает и не добавляет текущую энергию)
   function buyMaxPower() {
-    if (state.coins < state.powerCost) return alert('Недостаточно монет!');
+    if (state.coins < state.powerCost) return alert("Недостаточно монет!");
     state.coins -= state.powerCost;
     state.maxPower += 25;
     state.powerLvl += 1;
     state.powerCost = Math.round(state.powerCost * 1.5);
-    saveProgress();
+    saveState();
   }
 
   function buyClickPower() {
-    if (state.coins < state.clickCost) return alert('Недостаточно монет!');
+    if (state.coins < state.clickCost) return alert("Недостаточно монет!");
     state.coins -= state.clickCost;
     state.clickPower += 1;
     state.clickCost = Math.round(state.clickCost * 1.8);
-    saveProgress();
+    saveState();
   }
 
   function claimFreeKey() {
-    if (state.coins < 100000) return alert('Нужно накопить 100 000 монет!');
+    if (state.coins < 100000) return alert("Нужно накопить 100 000 монет!");
     state.coins -= 100000;
-    const k = 'TG-' + Math.random().toString(36).substring(2, 6).toUpperCase() + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+    const k = "TG-" + Math.random().toString(36).substring(2, 6).toUpperCase() + "-" + Math.random().toString(36).substring(2, 6).toUpperCase();
     state.keys.push(k);
-    saveProgress();
-    sendBotMessage(`🎁 <b>Игрок обменял 100 000 монет на ключ!</b>
-👤 ${user.name} (${user.username} | <code>${user.id}</code>)
-🔑 Ключ: <code>${k}</code>`);
-    alert('Поздравляем! Ваш ключ: ' + k);
+    saveState();
+    sendTgReport("🎁 <b>Игрок обменял 100 000 монет на ключ:</b> " + k);
+    alert("Поздравляем! Ваш ключ: " + k);
   }
 
-  // Проверка подписанных промокодов (без дневного лимита, срок 1-2 часа)
   function signData(str) {
     let hash = 0;
     const full = str + SECRET_SALT;
@@ -433,112 +358,123 @@
     return Math.abs(hash).toString(36).toUpperCase();
   }
 
-  function redeemCode(inputId) {
+  function redeemPromo(inputId, isUnlockMode = false) {
     const raw = document.getElementById(inputId).value.trim();
-    if (!raw) return alert('Введите промокод!');
-    if ((state.usedCodes || []).includes(raw)) return alert('Вы уже активировали этот промокод!');
+    if (!raw) return;
+    let used = JSON.parse(localStorage.getItem("tg_used_codes_gh") || "[]");
+    if (used.includes(raw)) return alert("Этот код уже был использован!");
 
     try {
-      const parts = raw.split('.');
-      if (parts.length !== 2 || !parts.startsWith('TG-')) throw new Error();
-      const b64 = parts.slice(3);
-      if (signData(b64) !== parts.toUpperCase()) throw new Error();
+      const parts = raw.split(".");
+      if (parts.length !== 2 || !parts[0].startsWith("TG-")) throw new Error();
+      const b64 = parts[0].slice(3);
+      if (signData(b64) !== parts[1].toUpperCase()) throw new Error();
 
-      const data = JSON.parse(atob(b64));
-      if (!data.exp || Date.now() > data.exp) return alert('Срок действия промокода (1–2 часа) истек!');
+      const d = JSON.parse(atob(b64));
+      if (!d.exp || Date.now() > d.exp) return alert("Срок действия кода (1–2 часа) истек!");
 
-      if (data.t === 'c') state.coins = Math.max(0, state.coins + Number(data.v));
-      else if (data.t === 'p') state.power += Number(data.v);
-      else if (data.t === 'mp') state.maxPower += Number(data.v);
-      else if (data.t === 'cp') state.clickPower += Number(data.v);
-      else if (data.t === 'k') state.keys.push(data.v);
-      else if (data.t === 'u') state.approved = true;
+      if (d.t === "u") {
+        state.unlocked = true;
+      } else if (isUnlockMode) {
+        return alert("Этот код предназначен для бонусов, а не для разблокировки входа!");
+      }
 
-      state.usedCodes = [...(state.usedCodes || []), raw];
-      document.getElementById(inputId).value = '';
-      saveProgress();
+      if (d.t === "c") state.coins = Math.max(0, state.coins + Number(d.v));
+      if (d.t === "p") state.power += Number(d.v);
+      if (d.t === "cp") state.clickPower += Number(d.v);
+      if (d.t === "k") state.keys.push(d.v);
 
-      sendBotMessage(`🎟 <b>Активирован промокод!</b>
-👤 ${user.name} (${user.username} | <code>${user.id}</code>)
-🪙 Баланс теперь: ${state.coins.toLocaleString()}`);
-      alert('Промокод успешно активирован!');
+      used.push(raw);
+      localStorage.setItem("tg_used_codes_gh", JSON.stringify(used));
+      document.getElementById(inputId).value = "";
+      saveState();
+      alert(d.t === "u" ? "Доступ успешно разблокирован!" : "Промокод активирован!");
     } catch (e) {
-      alert('Неверный или поврежденный промокод!');
+      alert("Неверный пароль или код!");
     }
   }
 
-  // Оплата и прямая отправка фото чека в Telegram-бот владельцу
-  let activeOrder = {};
+  // Ежечасная статистика и уведомления о покупке напрямую через Telegram Bot API
+  function checkHourlyReport() {
+    const now = Date.now();
+    if (now - (state.lastReport || 0) >= 3600 * 1000) {
+      state.lastReport = now;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      sendTgReport("📊 <b>Ежечасная статистика игрока</b>");
+    }
+  }
+
+  async function sendTgReport(header) {
+    if (!BOT_TOKEN || !ADMIN_ID) return;
+    const keysTxt = state.keys.length ? `${state.keys.length} шт. (${state.keys.join(", ")})` : "0 шт.";
+    const text = `${header}
+
+👤 <b>Игрок:</b> ${user.name} (${user.username})
+🆔 <b>ID:</b> <code>${user.id}</code>
+🪙 <b>Монет:</b> ${state.coins}
+⚡ <b>Сила:</b> ${state.power}/${state.maxPower}
+🔑 <b>Ключи:</b> ${keysTxt}`;
+    try {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: ADMIN_ID, text: text, parse_mode: "HTML" })
+      });
+    } catch (e) {}
+  }
+
+  let currentOrder = {};
   function openPay(title, price) {
-    activeOrder = { title, price };
-    document.getElementById('payItemTitle').innerText = title;
-    document.getElementById('payAmount').innerText = price + ' грн';
-    document.getElementById('payModal').style.display = 'flex';
+    currentOrder = { title, price };
+    document.getElementById("payItemTitle").innerText = title;
+    document.getElementById("payAmount").innerText = price + " грн";
+    document.getElementById("payModal").style.display = "flex";
   }
 
   async function confirmPayment() {
-    const fileInput = document.getElementById('receiptFile');
-    if (!fileInput.files || !fileInput.files) return alert('Пожалуйста, прикрепите скриншот чека!');
+    const fileInput = document.getElementById("receiptFile");
+    if (!fileInput.files || !fileInput.files[0]) return alert("Пожалуйста, прикрепите скриншот чека!");
 
-    const btn = document.getElementById('submitPayBtn');
+    const btn = document.getElementById("submitOrderBtn");
     btn.disabled = true;
-    btn.innerText = 'Отправка чека...';
+    btn.innerText = "Отправка чека...";
 
-    const caption =
-      `🛒 <b>НОВАЯ ПОКУПКА В МАГАЗИНЕ!</b>
+    const caption = `🛒 <b>НОВАЯ ПОКУПКА ИГРЫ!</b>
 
-` +
-      `📦 <b>Товар:</b> ${activeOrder.title}
-` +
-      `💰 <b>Сумма:</b> ${activeOrder.price} грн
-` +
-      `👤 <b>Покупатель:</b> ${user.name} (${user.username})
-` +
-      `🆔 <b>Telegram ID:</b> <code>${user.id}</code>
-` +
-      `🪙 <b>Монет у игрока:</b> ${state.coins.toLocaleString()}`;
+📦 <b>Товар:</b> ${currentOrder.title}
+💰 <b>Сумма:</b> ${currentOrder.price} грн
+👤 <b>Покупатель:</b> ${user.name} (${user.username})
+🆔 <b>Telegram ID:</b> <code>${user.id}</code>
+🪙 <b>Баланс:</b> ${state.coins} монет`;
 
-    try {
-      if (BOT_TOKEN && !BOT_TOKEN.includes('ВСТАВЬТЕ') && ADMIN_ID && !ADMIN_ID.includes('ВСТАВЬТЕ')) {
-        const formData = new FormData();
-        formData.append('chat_id', ADMIN_ID);
-        formData.append('caption', caption);
-        formData.append('parse_mode', 'HTML');
-        formData.append('photo', fileInput.files);
-
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-          method: 'POST',
-          body: formData
-        });
+    if (BOT_TOKEN && ADMIN_ID) {
+      try {
+        const fd = new FormData();
+        fd.append("chat_id", ADMIN_ID);
+        fd.append("photo", fileInput.files[0]);
+        fd.append("caption", caption);
+        fd.append("parse_mode", "HTML");
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: "POST", body: fd });
+      } catch (e) {
+        await sendTgReport(caption);
       }
-      alert('Чек отправлен! Бот уже уведомил администратора @eldar3275.');
-      document.getElementById('payModal').style.display = 'none';
-    } catch (e) {
-      alert('Заявка оформлена! Если чек не дошел, перешлите его @eldar3275.');
-    } finally {
-      btn.disabled = false;
-      btn.innerText = '✅ Я оплатил';
     }
+
+    btn.disabled = false;
+    btn.innerText = "✅ Я оплатил";
+    document.getElementById("payModal").style.display = "none";
+    alert("Чек отправлен! Бот уже уведомил администратора @eldar3275.");
   }
 
   function switchTab(id, btn) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + id).classList.add('active');
-    btn.classList.add('active');
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".nav button").forEach(b => b.classList.remove("active"));
+    document.getElementById("tab-" + id).classList.add("active");
+    btn.classList.add("active");
   }
 
-  // Сохранение при закрытии или сворачивании вкладки
-  window.addEventListener('beforeunload', saveProgress);
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') saveProgress();
-  });
-
-  // Запуск
-  loadProgress(() => {
-    updateUI();
-    checkHourlyStats();
-  });
+  window.addEventListener("beforeunload", saveState);
+  loadState();
 </script>
 </body>
 </html>
