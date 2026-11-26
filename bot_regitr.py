@@ -1,68 +1,50 @@
 
 import os
 import json
-import time
 import asyncio
 from datetime import datetime
 from zoneinfo import ZoneInfo
-import aiohttp
 from aiohttp import web
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.types import (
-    Message,
-    CallbackQuery,
-    ReplyKeyboardMarkup,
-    KeyboardButton,
-    InlineKeyboardMarkup,
-    InlineKeyboardButton,
+    Message, CallbackQuery,
+    ReplyKeyboardMarkup, KeyboardButton,
+    InlineKeyboardMarkup, InlineKeyboardButton,
     WebAppInfo
 )
-from aiogram.filters import Command
+from aiogram.filters import CommandStart
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
-PORT = int(os.getenv("PORT", 8000))
-SELF_URL = os.getenv("RENDER_EXTERNAL_URL", "https://shopbot-2-412g.onrender.com")
 WEBAPP_URL = "https://moiseenkoeldar2-del.github.io/shopbot/"
-SUPPORT_CONTACT = "@eldar3275"
-APP_VERSION = "3.1"
-KYIV_TZ = ZoneInfo("Europe/Kyiv")
+SELF_URL = "https://shopbot-2-412g.onrender.com"
 DATA_FILE = "registrations.json"
+APP_VERSION = "3.2"
+KYIV_TZ = ZoneInfo("Europe/Kyiv")
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 router = Router()
 
-# Хранилище:
-# users: {str(user_id): {"nick": str, "registered_at": float, "last_seen": float, "logins": int, "username": str, "version": str}}
-# nicks: {nick_lower: str(user_id)}
-# login_requests: {nick_lower: {"status": "pending"|"approved"|"denied", "ts": float}}
-# search_mode: set(user_id)
-
-def load_data():
+def load_db():
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             pass
-    return {"users": {}, "nicks": {}}
+    return {"users": {}, "nick_to_id": {}, "login_status": {}}
 
-def save_data(data):
-    try:
-        with open(DATA_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
-    except Exception:
-        pass
+def save_db(db):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
+        json.dump(db, f, ensure_ascii=False, indent=2)
 
-db = load_data()
-login_requests = {}
-search_mode = set()
+db = load_db()
 
 def is_night_mode() -> bool:
-    now_kyiv = datetime.now(KYIV_TZ)
-    return 0 <= now_kyiv.hour < 7
+    now = datetime.now(KYIV_TZ)
+    return 0 <= now.hour < 7
 
-def get_main_keyboard() -> ReplyKeyboardMarkup:
+def main_menu_kb():
     return ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="🟢 Онлайн"), KeyboardButton(text="🔍 Найти игрока")],
@@ -72,430 +54,320 @@ def get_main_keyboard() -> ReplyKeyboardMarkup:
         resize_keyboard=True
     )
 
-def format_time_ago(ts: float) -> str:
-    diff = int(time.time() - ts)
-    if diff < 300:
-        return "🟢 Онлайн (сейчас)"
-    mins = diff // 60
-    if mins < 60:
-        return f"⚫ Был(а) {mins} мин. назад"
-    hours = mins // 60
-    if hours < 24:
-        return f"⚫ Был(а) {hours} ч. назад"
-    days = hours // 24
-    return f"⚫ Был(а) {days} дн. назад"
-
-def format_date(ts: float) -> str:
-    return datetime.fromtimestamp(ts, KYIV_TZ).strftime("%d.%m.%Y %H:%M")
-
 def update_activity(user_id: int, username: str = ""):
     uid = str(user_id)
-    if uid in db["users"]:
-        db["users"][uid]["last_seen"] = time.time()
+    now_ts = datetime.now(KYIV_TZ).timestamp()
+    if uid not in db["users"]:
+        db["users"][uid] = {
+            "nickname": None,
+            "username": username,
+            "registered_at": None,
+            "last_seen": now_ts,
+            "logins": 0,
+            "version": APP_VERSION
+        }
+    else:
+        db["users"][uid]["last_seen"] = now_ts
         if username:
             db["users"][uid]["username"] = username
-        save_data(db)
+    save_db(db)
 
-def render_profile_card(uid: str, is_owner: bool = False) -> str:
-    u = db["users"][uid]
-    status_str = format_time_ago(u.get("last_seen", 0))
-    reg_date = format_date(u.get("registered_at", time.time()))
-    logins = u.get("logins", 0)
-    uname = f" (@{u['username']})" if u.get("username") else ""
-    header = "👤 **Ваш профиль**" if is_owner else f"🪪 **Профиль игрока {u['nick']}**"
-    text = (
-        f"{header}\n\n"
-        f"🏷 Позывной: `{u['nick']}`{uname}\n"
-        f"📡 Статус: {status_str}\n"
-        f"📅 Регистрация: {reg_date}\n"
-        f"🔐 Входов в приложение: {logins}\n"
-        f"💬 Поддержка: {SUPPORT_CONTACT}"
-    )
-    return text
-
-@router.message(Command("start"))
+@router.message(CommandStart())
 async def cmd_start(message: Message):
     if is_night_mode():
-        return await message.answer(
-            "🌙 **Бот находится в ночном режиме (с 00:00 до 07:00 по Киеву).**\n"
-            "Приём регистраций и входов временно приостановлен. Возвращайтесь после 07:00!\n\n"
-            f"💬 Поддержка: {SUPPORT_CONTACT}",
-            parse_mode="Markdown"
-        )
+        await message.answer("🌙 Бот находится в ночном режиме (с 00:00 до 07:00 по Киеву). Возвращайтесь после 07:00!")
+        return
 
     uid = str(message.from_user.id)
-    username = message.from_user.username or ""
-    search_mode.discard(message.from_user.id)
+    update_activity(message.from_user.id, message.from_user.username or "")
+    db["users"][uid]["version"] = APP_VERSION
+    save_db(db)
 
-    if uid in db["users"]:
-        db["users"][uid]["version"] = APP_VERSION
-        db["users"][uid]["last_seen"] = time.time()
-        if username:
-            db["users"][uid]["username"] = username
-        save_data(db)
-        nick = db["users"][uid]["nick"]
+    nick = db["users"][uid].get("nickname")
+    if nick:
         await message.answer(
-            f"✅ **Сессия обновлена (v{APP_VERSION})!**\n\n"
-            f"Ваш закреплённый позывной: `{nick}`\n"
-            f"Используйте меню кнопок ниже или запускайте приложение прямо отсюда.\n\n"
-            f"💬 Поддержка: {SUPPORT_CONTACT}",
-            reply_markup=get_main_keyboard(),
-            parse_mode="Markdown"
+            f"✅ Система обновлена (v{APP_VERSION})!\n"
+            f"Ваш закреплённый позывной: <b>{nick}</b>\n\n"
+            f"Используйте меню ниже или откройте приложение.",
+            reply_markup=main_menu_kb(),
+            parse_mode="HTML"
         )
     else:
         await message.answer(
-            f"🛸 **Добро пожаловать в DRONEPOINT AREX PRO SHOP!**\n\n"
-            f"Для доступа к приложению необходимо зарегистрировать позывной.\n"
-            f"⚠️ Правило: **строго 1 регистрация на человека**.\n\n"
-            f"✍️ **Напишите в этот чат ваш желаемый позывной** (от 3 до 16 символов: буквы, цифры, `_`):",
-            reply_markup=get_main_keyboard(),
-            parse_mode="Markdown"
+            f"🛸 Добро пожаловать в <b>DRONEPOINT AREX PRO</b>!\n\n"
+            f"Правило: <b>1 регистрация на человека</b>.\n"
+            f"✏️ Напишите в чат желаемый позывной (от 3 до 16 символов), чтобы зарегистрироваться:",
+            reply_markup=main_menu_kb(),
+            parse_mode="HTML"
         )
 
-@router.message(F.text.lower().startswith("/resetник") | (F.text == "♻️ Сбросить ник"))
-async def cmd_reset_nick(message: Message):
+@router.message(F.text.lower() == "/resetник")
+@router.message(F.text == "♻️ Сбросить ник")
+async def reset_nick(message: Message):
     if is_night_mode():
-        return await message.answer("🌙 Ночной режим (00:00 – 07:00). Сброс доступен после 07:00.")
+        await message.answer("🌙 Ночной режим (00:00 – 07:00). Попробуйте утром!")
+        return
 
     uid = str(message.from_user.id)
-    search_mode.discard(message.from_user.id)
+    update_activity(message.from_user.id)
+    user_data = db["users"].get(uid, {})
+    old_nick = user_data.get("nickname")
 
-    if uid in db["users"]:
-        old_nick = db["users"][uid]["nick"]
-        db["nicks"].pop(old_nick.lower(), None)
-        db["users"].pop(uid, None)
-        login_requests.pop(old_nick.lower(), None)
-        save_data(db)
+    if old_nick:
+        db["nick_to_id"].pop(old_nick.lower(), None)
+        db["login_status"].pop(old_nick.lower(), None)
+        db["users"][uid]["nickname"] = None
+        save_db(db)
         await message.answer(
-            f"♻️ **Лимит «1 регистрация на человека» сброшен!**\n"
-            f"Позывной `{old_nick}` отвязан от вашего аккаунта.\n\n"
-            f"✍️ Напишите новый желаемый позывной в чат для регистрации:",
-            reply_markup=get_main_keyboard(),
-            parse_mode="Markdown"
+            f"♻️ Лимит «1 регистрация на человека» сброшен (позывной <b>{old_nick}</b> отвязан).\n"
+            f"✏️ Напишите новый позывной в чат для регистрации:",
+            reply_markup=main_menu_kb(),
+            parse_mode="HTML"
         )
     else:
-        await message.answer(
-            "ℹ️ У вас сейчас нет закреплённого позывного.\n✍️ Просто напишите желаемый ник в чат, чтобы зарегистрироваться!",
-            reply_markup=get_main_keyboard()
-        )
+        await message.answer("ℹ️ У вас нет закреплённого позывного. Просто напишите желаемый ник в чат!", reply_markup=main_menu_kb())
 
 @router.message(F.text == "🟢 Онлайн")
-async def cmd_online(message: Message):
+async def show_online(message: Message):
     if is_night_mode():
-        return await message.answer("🌙 Ночной режим (00:00 – 07:00). Мониторинг доступен после 07:00.")
+        await message.answer("🌙 Ночной режим (00:00 – 07:00).")
+        return
 
-    uid = str(message.from_user.id)
-    if uid in db["users"] and db["users"][uid].get("version") != APP_VERSION:
-        return await message.answer("🔄 Система обновилась! Пожалуйста, нажмите /start, чтобы обновить меню.")
-
-    update_activity(message.from_user.id, message.from_user.username or "")
-    search_mode.discard(message.from_user.id)
-
-    if not db["users"]:
-        return await message.answer("📭 В системе пока нет зарегистрированных игроков.", reply_markup=get_main_keyboard())
-
-    now = time.time()
+    update_activity(message.from_user.id)
+    now_ts = datetime.now(KYIV_TZ).timestamp()
     online_list = []
     offline_list = []
     buttons = []
 
-    sorted_users = sorted(db["users"].items(), key=lambda x: x[1].get("last_seen", 0), reverse=True)
-    for target_uid, info in sorted_users:
-        nick = info["nick"]
-        is_on = (now - info.get("last_seen", 0)) < 300
-        if is_on:
-            online_list.append(f"• `{nick}` — 🟢 В сети")
+    for uid, info in db["users"].items():
+        nick = info.get("nickname")
+        if not nick:
+            continue
+        diff = int(now_ts - info.get("last_seen", 0))
+        if diff <= 300:
+            online_list.append(f"🟢 <b>{nick}</b> — в сети")
         else:
-            offline_list.append(f"• `{nick}` — {format_time_ago(info.get('last_seen', 0))}")
-        buttons.append([InlineKeyboardButton(text=f"🪪 Профиль: {nick}", callback_data=f"view_prof:{target_uid}")])
+            mins = max(1, diff // 60)
+            ago = f"{mins} мин. назад" if mins < 60 else f"{mins // 60} ч. назад"
+            offline_list.append(f"⚫ <b>{nick}</b> — {ago}")
+        buttons.append([InlineKeyboardButton(text=f"👤 Профиль: {nick}", callback_data=f"prof:{nick}")])
 
-    text = f"📡 **Мониторинг игроков (Всего: {len(sorted_users)})**\n\n"
-    text += f"**🟢 Сейчас в сети ({len(online_list)}):**\n" + ("\n".join(online_list) if online_list else "Никого нет") + "\n\n"
-    text += f"**⚫ Не в сети ({len(offline_list)}):**\n" + ("\n".join(offline_list[:15]) if offline_list else "Пусто")
-    text += "\n\n👇 Нажмите на игрока ниже, чтобы открыть его профиль:"
+    text = f"📊 <b>Мониторинг операторов</b>\n🟢 В сети: {len(online_list)} | ⚫ Офлайн: {len(offline_list)}\n\n"
+    text += "\n".join(online_list + offline_list) if (online_list or offline_list) else "Пока нет зарегистрированных игроков."
 
-    kb = InlineKeyboardMarkup(inline_keyboard=buttons[:20])
-    await message.answer(text, reply_markup=kb, parse_mode="Markdown")
+    kb = InlineKeyboardMarkup(inline_keyboard=buttons[:15]) if buttons else None
+    await message.answer(text, reply_markup=kb, parse_mode="HTML")
 
 @router.message(F.text == "👤 Мой профиль")
-async def cmd_my_profile(message: Message):
+async def my_profile(message: Message):
     if is_night_mode():
-        return await message.answer("🌙 Ночной режим (00:00 – 07:00). Профиль доступен после 07:00.")
+        await message.answer("🌙 Ночной режим (00:00 – 07:00).")
+        return
 
     uid = str(message.from_user.id)
-    if uid in db["users"] and db["users"][uid].get("version") != APP_VERSION:
-        return await message.answer("🔄 Система обновилась! Пожалуйста, нажмите /start, чтобы обновить меню.")
+    update_activity(message.from_user.id)
+    info = db["users"].get(uid, {})
+    nick = info.get("nickname") or "Не зарегистрирован"
+    reg_at = info.get("registered_at") or "—"
+    logins = info.get("logins", 0)
 
-    search_mode.discard(message.from_user.id)
-    if uid not in db["users"]:
-        return await message.answer(
-            "❌ Вы ещё не зарегистрированы.\n✍️ Напишите желаемый позывной в этот чат, чтобы создать профиль:",
-            reply_markup=get_main_keyboard()
-        )
-
-    update_activity(message.from_user.id, message.from_user.username or "")
-    await message.answer(render_profile_card(uid, is_owner=True), reply_markup=get_main_keyboard(), parse_mode="Markdown")
-
-@router.message(F.text == "🔍 Найти игрока")
-async def cmd_find_player(message: Message):
-    if is_night_mode():
-        return await message.answer("🌙 Ночной режим (00:00 – 07:00). Поиск доступен после 07:00.")
-
-    uid = str(message.from_user.id)
-    if uid in db["users"] and db["users"][uid].get("version") != APP_VERSION:
-        return await message.answer("🔄 Система обновилась! Пожалуйста, нажмите /start, чтобы обновить меню.")
-
-    update_activity(message.from_user.id, message.from_user.username or "")
-    search_mode.add(message.from_user.id)
     await message.answer(
-        "🔍 **Поиск профиля игрока**\n\nВведите точный позывной игрока, чей профиль хотите посмотреть:",
-        parse_mode="Markdown"
+        f"👤 <b>Карточка оператора</b>\n"
+        f"• Позывной: <b>{nick}</b>\n"
+        f"• Telegram ID: <code>{uid}</code>\n"
+        f"• Регистрация: {reg_at}\n"
+        f"• Входов в систему: {logins}\n"
+        f"• Поддержка: @eldar3275",
+        reply_markup=main_menu_kb(),
+        parse_mode="HTML"
     )
 
-@router.callback_query(F.data.startswith("view_prof:"))
-async def cb_view_profile(callback: CallbackQuery):
+@router.message(F.text == "🔍 Найти игрока")
+async def find_player_prompt(message: Message):
     if is_night_mode():
-        return await callback.answer("🌙 Ночной режим (00:00 – 07:00)", show_alert=True)
+        await message.answer("🌙 Ночной режим (00:00 – 07:00).")
+        return
+    update_activity(message.from_user.id)
+    await message.answer("🔍 Напишите в чат позывной игрока, профиль которого хотите посмотреть:")
 
-    target_uid = callback.data.split(":", 1)[1]
-    if target_uid not in db["users"]:
-        return await callback.answer("Профиль не найден или сброшен.", show_alert=True)
+@router.callback_query(F.data.startswith("prof:"))
+async def view_other_profile(callback: CallbackQuery):
+    nick = callback.data.split(":", 1)[1]
+    target_uid = db["nick_to_id"].get(nick.lower())
+    if not target_uid or target_uid not in db["users"]:
+        await callback.answer("Профиль не найден", show_alert=True)
+        return
 
-    is_owner = (target_uid == str(callback.from_user.id))
-    await callback.message.answer(render_profile_card(target_uid, is_owner=is_owner), parse_mode="Markdown")
+    info = db["users"][target_uid]
+    now_ts = datetime.now(KYIV_TZ).timestamp()
+    is_on = (now_ts - info.get("last_seen", 0)) <= 300
+    status_str = "🟢 В сети" if is_on else "⚫ Не в сети"
+
+    await callback.message.answer(
+        f"🪪 <b>Профиль игрока {info.get('nickname')}</b>\n"
+        f"• Статус: {status_str}\n"
+        f"• Дата регистрации: {info.get('registered_at') or '—'}\n"
+        f"• Успешных входов: {info.get('logins', 0)}",
+        parse_mode="HTML"
+    )
     await callback.answer()
 
 @router.callback_query(F.data.startswith("login_yes:"))
-async def cb_login_yes(callback: CallbackQuery):
+async def approve_login(callback: CallbackQuery):
     nick = callback.data.split(":", 1)[1]
-    nick_key = nick.lower()
+    db["login_status"][nick.lower()] = "approved"
     uid = str(callback.from_user.id)
-
-    login_requests[nick_key] = {"status": "approved", "ts": time.time()}
     if uid in db["users"]:
-        db["users"][uid]["last_seen"] = time.time()
         db["users"][uid]["logins"] = db["users"][uid].get("logins", 0) + 1
-        save_data(db)
-
-    await callback.message.edit_text(
-        f"✅ **Вход в аккаунт `{nick}` подтверждён!**\nВернитесь в приложение — доступ открыт.",
-        parse_mode="Markdown"
-    )
-    await callback.answer("Вход разрешён!")
+    save_db(db)
+    await callback.message.edit_text(f"✅ Вход в аккаунт <b>{nick}</b> подтверждён!", parse_mode="HTML")
+    await callback.answer("Доступ открыт")
 
 @router.callback_query(F.data.startswith("login_no:"))
-async def cb_login_no(callback: CallbackQuery):
+async def deny_login(callback: CallbackQuery):
     nick = callback.data.split(":", 1)[1]
-    nick_key = nick.lower()
-
-    login_requests[nick_key] = {"status": "denied", "ts": time.time()}
-    await callback.message.edit_text(
-        f"⛔ **Запрос на вход в аккаунт `{nick}` отклонён.**\nПопытка чужого входа заблокирована.",
-        parse_mode="Markdown"
-    )
-    await callback.answer("Запрос отклонён!", show_alert=True)
+    db["login_status"][nick.lower()] = "denied"
+    save_db(db)
+    await callback.message.edit_text(f"⛔ Запрос на вход в аккаунт <b>{nick}</b> отклонён.", parse_mode="HTML")
+    await callback.answer("Вход отклонён", show_alert=True)
 
 @router.message(F.text)
 async def handle_text(message: Message):
     if is_night_mode():
-        return await message.answer(
-            "🌙 **Ночной режим (с 00:00 до 07:00 по Киеву).**\nБот временно отдыхает. Возвращайтесь после 07:00!",
-            parse_mode="Markdown"
-        )
+        await message.answer("🌙 Бот на ночном перерыве с 00:00 до 07:00 по Киеву.")
+        return
 
-    user_id = message.from_user.id
-    uid = str(user_id)
+    uid = str(message.from_user.id)
+    update_activity(message.from_user.id, message.from_user.username or "")
+
+    if db["users"].get(uid, {}).get("version") != APP_VERSION:
+        await message.answer("🔄 Система обновилась! Пожалуйста, нажмите /start для обновления меню.")
+        return
+
     text = message.text.strip()
-    username = message.from_user.username or ""
+    existing_nick = db["users"][uid].get("nickname")
 
-    # Режим поиска другого игрока
-    if user_id in search_mode:
-        search_mode.discard(user_id)
-        target_uid = db["nicks"].get(text.lower())
-        if not target_uid or target_uid not in db["users"]:
-            return await message.answer(
-                f"❌ Игрок с позывным `{text}` не найден в базе.",
-                reply_markup=get_main_keyboard(),
-                parse_mode="Markdown"
+    if existing_nick:
+        target_uid = db["nick_to_id"].get(text.lower())
+        if target_uid and target_uid in db["users"]:
+            info = db["users"][target_uid]
+            now_ts = datetime.now(KYIV_TZ).timestamp()
+            status_str = "🟢 В сети" if (now_ts - info.get("last_seen", 0)) <= 300 else "⚫ Офлайн"
+            await message.answer(
+                f"🪪 <b>Профиль игрока {info.get('nickname')}</b>\n"
+                f"• Статус: {status_str}\n"
+                f"• Регистрация: {info.get('registered_at') or '—'}\n"
+                f"• Входов: {info.get('logins', 0)}",
+                parse_mode="HTML"
             )
-        return await message.answer(
-            render_profile_card(target_uid, is_owner=(target_uid == uid)),
-            reply_markup=get_main_keyboard(),
-            parse_mode="Markdown"
-        )
+        else:
+            await message.answer(
+                f"ℹ️ За вами уже закреплён позывной <b>{existing_nick}</b> (1 регистрация на человека).\n"
+                f"Если хотите сменить его — нажмите <b>♻️ Сбросить ник</b>.",
+                reply_markup=main_menu_kb(),
+                parse_mode="HTML"
+            )
+        return
 
-    # Проверка версии для уже зарегистрированных
-    if uid in db["users"]:
-        if db["users"][uid].get("version") != APP_VERSION:
-            return await message.answer("🔄 Система обновилась! Нажмите /start, чтобы обновить меню кнопок.")
-        update_activity(user_id, username)
-        existing_nick = db["users"][uid]["nick"]
-        return await message.answer(
-            f"⚠️ За вами уже закреплён позывной `{existing_nick}` (правило: **1 регистрация на человека**).\n\n"
-            f"• Чтобы открыть приложение, нажмите **«🚀 Открыть приложение»**.\n"
-            f"• Чтобы сменить позывной, нажмите **«♻️ Сбросить ник»**.",
-            reply_markup=get_main_keyboard(),
-            parse_mode="Markdown"
-        )
+    if len(text) < 3 or len(text) > 16 or text.startswith("/"):
+        await message.answer("⚠️ Позывной должен содержать от 3 до 16 символов и не начинаться с /.")
+        return
 
-    # Регистрация нового позывного
-    if len(text) < 3 or len(text) > 16 or " " in text:
-        return await message.answer(
-            "❌ Позывной должен быть от **3 до 16 символов** без пробелов.\nПопробуйте ещё раз:",
-            parse_mode="Markdown"
-        )
+    if text.lower() in db["nick_to_id"]:
+        await message.answer("❌ Этот позывной уже занят другим игроком! Придумайте другой.")
+        return
 
-    nick_lower = text.lower()
-    if nick_lower in db["nicks"]:
-        return await message.answer(
-            f"⛔ Позывной `{text}` уже занят другим игроком! Придумайте другой:",
-            parse_mode="Markdown"
-        )
+    now_str = datetime.now(KYIV_TZ).strftime("%d.%m.%Y %H:%M")
+    db["users"][uid]["nickname"] = text
+    db["users"][uid]["registered_at"] = now_str
+    db["nick_to_id"][text.lower()] = uid
+    save_db(db)
 
-    db["users"][uid] = {
-        "nick": text,
-        "registered_at": time.time(),
-        "last_seen": time.time(),
-        "logins": 0,
-        "username": username,
-        "version": APP_VERSION
-    }
-    db["nicks"][nick_lower] = uid
-    save_data(db)
-
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🚀 Открыть приложение", web_app=WebAppInfo(url=WEBAPP_URL))]
-    ])
     await message.answer(
-        f"🎉 **Регистрация успешно завершена!**\n\n"
-        f"🏷 Ваш позывной: `{text}`\n"
-        f"🔒 Привязка: 1 аккаунт на человека\n\n"
-        f"Теперь откройте приложение, введите позывной `{text}` и подтвердите вход здесь в боте!",
-        reply_markup=kb,
-        parse_mode="Markdown"
+        f"✅ Позывной <b>{text}</b> успешно зарегистрирован!\n"
+        f"Теперь откройте приложение, введите этот ник и подтвердите вход в боте.",
+        reply_markup=main_menu_kb(),
+        parse_mode="HTML"
     )
-    await message.answer("Меню управления активировано 👇", reply_markup=get_main_keyboard())
 
-# --- HTTP API для связи с приложением ---
-CORS_HEADERS = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type"
-}
+# HTTP API ДЛЯ ПРИЛОЖЕНИЯ
+def cors_headers():
+    return {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type"
+    }
 
 async def handle_options(request):
-    return web.Response(status=204, headers=CORS_HEADERS)
+    return web.Response(headers=cors_headers())
 
-async def handle_health(request):
+async def health_check(request):
     return web.json_response(
         {"status": "ok", "bot": "DRONEPOINT_AREX_PRO_REGISTR_BOT", "night_mode": is_night_mode()},
-        headers=CORS_HEADERS
+        headers=cors_headers()
     )
 
-async def handle_request_login(request):
+async def api_request_login(request):
     if is_night_mode():
-        return web.json_response(
-            {"ok": False, "error": "night_mode", "message": "Ночной режим (00:00 – 07:00). Вход доступен после 07:00."},
-            headers=CORS_HEADERS
-        )
+        return web.json_response({"status": "night_mode"}, headers=cors_headers())
 
-    try:
-        data = await request.json()
-    except Exception:
-        return web.json_response({"ok": False, "error": "bad_json"}, status=400, headers=CORS_HEADERS)
+    data = await request.json()
+    nick = (data.get("nickname") or "").strip()
+    owner_uid = db["nick_to_id"].get(nick.lower())
 
-    nick = str(data.get("nickname", "")).strip()
-    if not nick:
-        return web.json_response({"ok": False, "error": "empty_nick"}, headers=CORS_HEADERS)
+    if not owner_uid:
+        return web.json_response({"status": "not_found"}, headers=cors_headers())
 
-    nick_key = nick.lower()
-    if nick_key == "/resetник":
-        req_uid = str(data.get("user_id", ""))
-        if req_uid in db["users"]:
-            old_n = db["users"][req_uid]["nick"]
-            db["nicks"].pop(old_n.lower(), None)
-            db["users"].pop(req_uid, None)
-            save_data(db)
-        return web.json_response({"ok": True, "reset": True}, headers=CORS_HEADERS)
-
-    owner_uid = db["nicks"].get(nick_key)
-    if not owner_uid or owner_uid not in db["users"]:
-        return web.json_response(
-            {"ok": False, "error": "not_found", "message": "Позывной не найден. Сначала зарегистрируйтесь в боте!"},
-            headers=CORS_HEADERS
-        )
-
-    real_nick = db["users"][owner_uid]["nick"]
-    login_requests[nick_key] = {"status": "pending", "ts": time.time()}
+    db["login_status"][nick.lower()] = "pending"
+    save_db(db)
 
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="✅ Да", callback_data=f"login_yes:{real_nick}"),
-            InlineKeyboardButton(text="❌ Нет", callback_data=f"login_no:{real_nick}")
+            InlineKeyboardButton(text="✅ Да", callback_data=f"login_yes:{nick}"),
+            InlineKeyboardButton(text="❌ Нет", callback_data=f"login_no:{nick}")
         ]
     ])
-
     try:
         await bot.send_message(
             chat_id=int(owner_uid),
-            text=f"🔐 **Запрос на вход в приложение**\n\nПозывной: `{real_nick}`\nЭто вы пытаетесь зайти в аккаунт?",
+            text=f"🔐 <b>Запрос на вход в приложение</b>\nПозывной: <b>{nick}</b>\n\nЭто вы пытаетесь зайти в аккаунт?",
             reply_markup=kb,
-            parse_mode="Markdown"
+            parse_mode="HTML"
         )
-    except Exception:
-        return web.json_response(
-            {"ok": False, "error": "bot_blocked", "message": "Нажмите /start в боте @DRONEPOINT_AREX_PRO_REGISTR_BOT, чтобы получать уведомления!"},
-            headers=CORS_HEADERS
-        )
-
-    return web.json_response({"ok": True, "status": "pending", "nickname": real_nick}, headers=CORS_HEADERS)
-
-async def handle_check_login(request):
-    if is_night_mode():
-        return web.json_response({"status": "night_mode"}, headers=CORS_HEADERS)
-
-    nick = request.query.get("nickname", "").strip().lower()
-    req = login_requests.get(nick)
-    if not req:
-        return web.json_response({"status": "none"}, headers=CORS_HEADERS)
-    return web.json_response({"status": req["status"]}, headers=CORS_HEADERS)
-
-async def handle_ping(request):
-    try:
-        data = await request.json()
-        nick = str(data.get("nickname", "")).strip().lower()
-        owner_uid = db["nicks"].get(nick)
-        if owner_uid and owner_uid in db["users"]:
-            db["users"][owner_uid]["last_seen"] = time.time()
-            save_data(db)
     except Exception:
         pass
-    return web.json_response({"ok": True, "night_mode": is_night_mode()}, headers=CORS_HEADERS)
+
+    return web.json_response({"status": "pending"}, headers=cors_headers())
+
+async def api_check_login(request):
+    nick = (request.query.get("nickname") or "").strip().lower()
+    st = db["login_status"].get(nick, "pending")
+    return web.json_response({"status": st}, headers=cors_headers())
 
 async def self_ping_loop():
-    await asyncio.sleep(30)
-    async with aiohttp.ClientSession() as session:
-        while True:
-            if not is_night_mode() and SELF_URL:
-                try:
-                    async with session.get(SELF_URL, timeout=10) as resp:
+    import aiohttp
+    while True:
+        await asyncio.sleep(600)
+        if not is_night_mode():
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.get(SELF_URL) as resp:
                         await resp.text()
-                except Exception:
-                    pass
-            await asyncio.sleep(600)
+            except Exception:
+                pass
 
 async def main():
     dp.include_router(router)
     app = web.Application()
     app.router.add_route("OPTIONS", "/{tail:.*}", handle_options)
-    app.router.add_get("/", handle_health)
-    app.router.add_post("/api/request-login", handle_request_login)
-    app.router.add_get("/api/check-login", handle_check_login)
-    app.router.add_post("/api/ping", handle_ping)
+    app.router.add_get("/", health_check)
+    app.router.add_post("/api/request-login", api_request_login)
+    app.router.add_get("/api/check-login", api_check_login)
 
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", PORT)
+    port = int(os.getenv("PORT", 8000))
+    site = web.TCPSite(runner, "0.0.0.0", port)
     await site.start()
 
     asyncio.create_task(self_ping_loop())
