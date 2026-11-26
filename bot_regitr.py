@@ -1,7 +1,8 @@
-import asyncio
-import json
+
 import os
-import logging
+import json
+import time
+import asyncio
 from datetime import datetime
 from aiohttp import web
 from aiogram import Bot, Dispatcher, F, Router
@@ -10,325 +11,455 @@ from aiogram.types import (
     CallbackQuery,
     InlineKeyboardMarkup,
     InlineKeyboardButton,
+    ReplyKeyboardMarkup,
+    KeyboardButton,
     WebAppInfo,
 )
-from aiogram.filters import Command
-
-logging.basicConfig(level=logging.INFO)
+from aiogram.filters import CommandStart, Command
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "")
-WEBAPP_URL = os.getenv("WEBAPP_URL", "https://moiseenkoeldar2-del.github.io/shopbot/")
-DB_FILE = "registrations.json"
+WEBAPP_URL = "https://moiseenkoeldar2-del.github.io/shopbot/"
+DATA_FILE = "registrations.json"
+ONLINE_TIMEOUT = 300  # 5 минут активности = Онлайн
 
-if not BOT_TOKEN:
-    logging.warning("BOT_TOKEN не задан в переменных окружения!")
-
-bot = Bot(token=BOT_TOKEN) if BOT_TOKEN else None
+bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 router = Router()
 
-# Загрузка и сохранение базы регистраций
-def load_db():
-    if os.path.exists(DB_FILE):
+class RegStates(StatesGroup):
+    waiting_nick = State()
+    searching_player = State()
+
+def load_data():
+    if os.path.exists(DATA_FILE):
         try:
-            with open(DB_FILE, "r", encoding="utf-8") as f:
+            with open(DATA_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             pass
-    return {"users": {}, "nicks": {}}
+    return {"users": {}, "nicks": {}, "login_status": {}}
 
-def save_db(data):
-    with open(DB_FILE, "w", encoding="utf-8") as f:
+def save_data(data):
+    with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-db = load_db()
+db = load_data()
 
-# Статусы запросов на вход (по нику в нижнем регистре и по user_id)
-login_status_by_nick = {}
-login_status_by_id = {}
-
-
-def get_webapp_keyboard():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🚀 Открыть ", web_app=WebAppInfo(url=WEBAPP_URL))]
-    ])
-
-
-@router.message(Command("start"))
-async def cmd_start(message: Message):
-    uid = str(message.from_user.id)
-    if uid in db["users"]:
-        nick = db["users"][uid]
-        await message.answer(
-            f"🛸 **DRONEPOINT AREX PRO — регистрации**\n\n"
-            f"Ваш закреплённый позывной: `{nick}`\n"
-            f"Правило: *1 регистрация на человека*.\n\n"
-            f"Нажмите кнопку ниже, чтобы открыть терминал, или отправьте `/resetник`, если нужно сбросить привязку.",
-            reply_markup=get_webapp_keyboard(),
-            parse_mode="Markdown"
-        )
-    else:
-        await message.answer(
-            "🛸 **Добро пожаловать в DRONEPOINT AREX PRO!**\n\n"
-            "Для доступа к терминалу необходимо зарегистрировать уникальный позывной (*1 регистрация на человека*).\n\n"
-            "✍️ **Напишите ваш желаемый ник прямо сюда в чат** (от 3 до 20 символов, буквы, цифры или `_`):",
-            parse_mode="Markdown"
-        )
-
-
-@router.message(F.text.lower().startswith("/resetник") | F.text.lower().startswith("/resetnick"))
-async def cmd_reset_nick(message: Message):
-    uid = str(message.from_user.id)
-    if uid in db["users"]:
-        old_nick = db["users"].pop(uid)
-        db["nicks"].pop(old_nick.lower(), None)
-        login_status_by_nick.pop(old_nick.lower(), None)
-        login_status_by_id.pop(uid, None)
-        save_db(db)
-        await message.answer(
-            f"♻️ Лимит «1 регистрация на человека» сброшен! Позывной `{old_nick}` отвязан.\n\n"
-            f"✍️ Напишите новый желаемый ник в чат для повторной регистрации:",
-            parse_mode="Markdown"
-        )
-    else:
-        await message.answer(
-            "ℹ️ У вас нет активной привязки позывного. Лимит свободен.\n"
-            "✍️ Напишите желаемый ник в чат, чтобы зарегистрироваться:"
-        )
-
-
-@router.message(F.text & ~F.text.startswith("/"))
-async def handle_nick_registration(message: Message):
-    uid = str(message.from_user.id)
-    raw_nick = message.text.strip()
-
-    if uid in db["users"]:
-        current_nick = db["users"][uid]
-        await message.answer(
-            f"⚠️ За вами уже закреплён позывной `{current_nick}` (действует правило: *1 регистрация на человека*).\n\n"
-            f"Используйте его для входа в терминал или отправьте `/resetник` для сброса.",
-            reply_markup=get_webapp_keyboard(),
-            parse_mode="Markdown"
-        )
-        return
-
-    if len(raw_nick) < 3 or len(raw_nick) > 20 or " " in raw_nick:
-        await message.answer(
-            "❌ Некорректный формат позывного. Используйте от 3 до 20 символов без пробелов.\nПопробуйте ещё раз:"
-        )
-        return
-
-    nick_key = raw_nick.lower()
-    if nick_key in db["nicks"] and db["nicks"][nick_key] != uid:
-        await message.answer(
-            f"⛔ Позывной `{raw_nick}` уже занят другим оператором. Придумайте другой:",
-            parse_mode="Markdown"
-        )
-        return
-
-    db["users"][uid] = raw_nick
-    db["nicks"][nick_key] = uid
-    save_db(db)
-
-    await message.answer(
-        f"✅ **Регистрация завершена!**\n\n"
-        f"Ваш позывной: `{raw_nick}`\n"
-        f"Telegram ID: `{uid}`\n\n"
-        f"1️⃣ Откройте терминал по кнопке ниже.\n"
-        f"2️⃣ Введите ваш ник и нажмите **«📨 Войти в аккаунт»**.\n"
-        f"3️⃣ Подтвердите вход кнопкой **«✅ Да»** в этом чате.",
-        reply_markup=get_webapp_keyboard(),
-        parse_mode="Markdown"
+def main_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="🟢 Онлайн"), KeyboardButton(text="🔍 Найти игрока")],
+            [KeyboardButton(text="👤 Мой профиль"), KeyboardButton(text="♻️ Сбросить ник")],
+            [KeyboardButton(text="🚀 Открыть приложение", web_app=WebAppInfo(url=WEBAPP_URL))],
+        ],
+        resize_keyboard=True,
     )
 
+def format_last_seen(ts: float) -> str:
+    diff = int(time.time() - ts)
+    if diff < ONLINE_TIMEOUT:
+        return "🟢 Онлайн (сейчас)"
+    mins = diff // 60
+    if mins < 60:
+        return f"⚫ Офлайн ({mins} мин. назад)"
+    hours = mins // 60
+    if hours < 24:
+        return f"⚫ Офлайн ({hours} ч. назад)"
+    days = hours // 24
+    return f"⚫ Офлайн ({days} дн. назад)"
+
+def update_activity(user_id: str, username: str = None, full_name: str = None):
+    if user_id in db["users"]:
+        db["users"][user_id]["last_seen"] = time.time()
+        if username is not None:
+            db["users"][user_id]["username"] = username
+        if full_name is not None:
+            db["users"][user_id]["full_name"] = full_name
+        save_data(db)
+
+def build_profile_text(uid: str, info: dict, is_own: bool = False) -> str:
+    nick = info.get("nick", "Неизвестно")
+    reg_date = info.get("reg_date", "Неизвестно")
+    logins = info.get("logins", 1)
+    status = format_last_seen(info.get("last_seen", 0))
+    header = "👤 **Ваш профиль**" if is_own else f"🪪 **Профиль игрока {nick}**"
+    lines = [
+        header,
+        "",
+        f"🏷 Позывной: `{nick}`",
+        f"📡 Статус: {status}",
+        f"📅 Регистрация: {reg_date}",
+        f"🔑 Успешных входов: {logins}",
+    ]
+    if is_own:
+        lines.append(f"🆔 Ваш ID: `{uid}`")
+    return "\n".join(lines)
+
+@router.message(CommandStart())
+async def cmd_start(message: Message, state: FSMContext):
+    await state.clear()
+    uid = str(message.from_user.id)
+    update_activity(uid, message.from_user.username, message.from_user.full_name)
+
+    if uid in db["users"]:
+        nick = db["users"][uid]["nick"]
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 Открыть приложение", web_app=WebAppInfo(url=f"{WEBAPP_URL}?nick={nick}"))]
+        ])
+        await message.answer(
+            f"👋 С возвращением! Ваш позывной: `{nick}`.\n\n"
+            f"Используйте кнопки меню ниже для просмотра игроков в сети, поиска профилей или запуска приложения.",
+            reply_markup=main_menu(),
+            parse_mode="Markdown",
+        )
+        await message.answer("Быстрый запуск магазина и кликера:", reply_markup=kb)
+    else:
+        await state.set_state(RegStates.waiting_nick)
+        await message.answer(
+            "🛸 **Добро пожаловать в DRONEPOINT AREX PRO!**\n\n"
+            "Правило системы: **1 регистрация на человека**.\n"
+            "✏️ Напишите в чат ваш желаемый позывной (от 3 до 16 символов, буквы/цифры/_):",
+            reply_markup=main_menu(),
+            parse_mode="Markdown",
+        )
+
+@router.message(F.text == "🟢 Онлайн")
+async def show_online(message: Message):
+    uid = str(message.from_user.id)
+    update_activity(uid, message.from_user.username, message.from_user.full_name)
+
+    if not db["users"]:
+        return await message.answer("📭 В системе пока нет зарегистрированных игроков.", reply_markup=main_menu())
+
+    now = time.time()
+    online_list = []
+    offline_list = []
+    buttons = []
+
+    for u_id, info in db["users"].items():
+        nick = info.get("nick", "Без ника")
+        last_seen = info.get("last_seen", 0)
+        if now - last_seen < ONLINE_TIMEOUT:
+            online_list.append(f"🟢 `{nick}` — в сети")
+        else:
+            offline_list.append(f"⚫ `{nick}` — {format_last_seen(last_seen).replace('⚫ Офлайн ', '')}")
+        buttons.append([InlineKeyboardButton(text=f"🪪 Профиль: {nick}", callback_data=f"view_prof:{u_id}")])
+
+    text_parts = [
+        f"📡 **Мониторинг игроков (Всего: {len(db['users'])})**",
+        f"🟢 В сети: **{len(online_list)}** | ⚫ Офлайн: **{len(offline_list)}**",
+        "",
+    ]
+    if online_list:
+        text_parts.append("**Сейчас онлайн:**")
+        text_parts.extend(online_list)
+        text_parts.append("")
+    if offline_list:
+        text_parts.append("**Не в сети:**")
+        text_parts.extend(offline_list[:20])
+
+    text_parts.append("\n👇 Нажмите на игрока ниже, чтобы открыть его профиль:")
+    kb = InlineKeyboardMarkup(inline_keyboard=buttons[:15])
+    await message.answer("\n".join(text_parts), reply_markup=kb, parse_mode="Markdown")
+
+@router.callback_query(F.data.startswith("view_prof:"))
+async def callback_view_profile(callback: CallbackQuery):
+    target_uid = callback.data.split(":", 1)[1]
+    update_activity(str(callback.from_user.id), callback.from_user.username, callback.from_user.full_name)
+
+    info = db["users"].get(target_uid)
+    if not info:
+        return await callback.answer("Профиль не найден.", show_alert=True)
+
+    is_own = (target_uid == str(callback.from_user.id))
+    text = build_profile_text(target_uid, info, is_own=is_own)
+    await callback.message.answer(text, parse_mode="Markdown")
+    await callback.answer()
+
+@router.message(F.text == "🔍 Найти игрока")
+async def ask_search_player(message: Message, state: FSMContext):
+    uid = str(message.from_user.id)
+    update_activity(uid, message.from_user.username, message.from_user.full_name)
+    await state.set_state(RegStates.searching_player)
+    await message.answer("🔍 Введите позывной игрока, чей профиль хотите посмотреть:")
+
+@router.message(RegStates.searching_player)
+async def process_search_player(message: Message, state: FSMContext):
+    query = message.text.strip()
+    if query in {"🟢 Онлайн", "🔍 Найти игрока", "👤 Мой профиль", "♻️ Сбросить ник", "🚀 Открыть приложение"}:
+        await state.clear()
+        return
+
+    await state.clear()
+    found_uid = None
+    for u_id, info in db["users"].items():
+        if info.get("nick", "").lower() == query.lower():
+            found_uid = u_id
+            break
+
+    if not found_uid:
+        return await message.answer(
+            f"❌ Игрок с позывным `{query}` не найден.",
+            reply_markup=main_menu(),
+            parse_mode="Markdown",
+        )
+
+    is_own = (found_uid == str(message.from_user.id))
+    text = build_profile_text(found_uid, db["users"][found_uid], is_own=is_own)
+    await message.answer(text, reply_markup=main_menu(), parse_mode="Markdown")
+
+@router.message(F.text == "👤 Мой профиль")
+async def my_profile(message: Message, state: FSMContext):
+    await state.clear()
+    uid = str(message.from_user.id)
+    update_activity(uid, message.from_user.username, message.from_user.full_name)
+
+    if uid not in db["users"]:
+        await state.set_state(RegStates.waiting_nick)
+        return await message.answer(
+            "⚠️ У вас ещё нет зарегистрированного профиля.\n✏️ Напишите желаемый позывной в чат:"
+        )
+
+    text = build_profile_text(uid, db["users"][uid], is_own=True)
+    await message.answer(text, reply_markup=main_menu(), parse_mode="Markdown")
+
+@router.message(F.text == "♻️ Сбросить ник")
+@router.message(Command("resetник"))
+@router.message(F.text.lower().startswith("/resetник"))
+async def reset_nick(message: Message, state: FSMContext):
+    await state.clear()
+    uid = str(message.from_user.id)
+
+    if uid in db["users"]:
+        old_nick = db["users"][uid]["nick"]
+        db["nicks"].pop(old_nick.lower(), None)
+        db["login_status"].pop(old_nick.lower(), None)
+        del db["users"][uid]
+        save_data(db)
+        await state.set_state(RegStates.waiting_nick)
+        await message.answer(
+            f"♻️ Лимит «1 регистрация на человека» сброшен! Позывной `{old_nick}` отвязан.\n\n"
+            f"✏️ Напишите новый позывной прямо сейчас:",
+            reply_markup=main_menu(),
+            parse_mode="Markdown",
+        )
+    else:
+        await state.set_state(RegStates.waiting_nick)
+        await message.answer(
+            "ℹ️ У вас нет привязанного позывного. Введите новый ник для регистрации:",
+            reply_markup=main_menu(),
+        )
+
+@router.message(RegStates.waiting_nick)
+async def register_nick_step(message: Message, state: FSMContext):
+    uid = str(message.from_user.id)
+    nick = message.text.strip()
+
+    if nick in {"🟢 Онлайн", "🔍 Найти игрока", "👤 Мой профиль", "♻️ Сбросить ник", "🚀 Открыть приложение"}:
+        return
+
+    if uid in db["users"]:
+        await state.clear()
+        return await message.answer(
+            f"⚠️ За вами уже закреплён позывной `{db['users'][uid]['nick']}` (правило: 1 регистрация на человека).",
+            parse_mode="Markdown",
+        )
+
+    if not (3 <= len(nick) <= 16) or not all(c.isalnum() or c in "_-" for c in nick):
+        return await message.answer(
+            "❌ Неверный формат! Используйте от 3 до 16 символов (буквы, цифры, `_` или `-`). Попробуйте ещё раз:"
+        )
+
+    if nick.lower() in db["nicks"]:
+        return await message.answer(f"⛔ Позывной `{nick}` уже занят другим игроком. Введите другой:", parse_mode="Markdown")
+
+    db["users"][uid] = {
+        "nick": nick,
+        "reg_date": datetime.now().strftime("%d.%m.%Y %H:%M"),
+        "last_seen": time.time(),
+        "logins": 0,
+        "username": message.from_user.username,
+        "full_name": message.from_user.full_name,
+    }
+    db["nicks"][nick.lower()] = uid
+    save_data(db)
+    await state.clear()
+
+    kb = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🚀 Открыть приложение", web_app=WebAppInfo(url=f"{WEBAPP_URL}?nick={nick}"))]
+    ])
+    await message.answer(
+        f"✅ Позывной `{nick}` успешно зарегистрирован!\n\n"
+        f"Нажмите кнопку ниже, чтобы открыть приложение, введите свой ник и подтвердите вход здесь в боте.",
+        reply_markup=main_menu(),
+        parse_mode="Markdown",
+    )
+    await message.answer("👇 Вход в магазин и кликер:", reply_markup=kb)
+
+@router.message(F.text)
+async def fallback_text(message: Message, state: FSMContext):
+    uid = str(message.from_user.id)
+    update_activity(uid, message.from_user.username, message.from_user.full_name)
+    text = message.text.strip()
+
+    if uid not in db["users"]:
+        return await register_nick_step(message, state)
+
+    # Быстрый просмотр профиля, если пользователь просто написал чей-то ник в чат
+    for u_id, info in db["users"].items():
+        if info.get("nick", "").lower() == text.lower():
+            prof = build_profile_text(u_id, info, is_own=(u_id == uid))
+            return await message.answer(prof, reply_markup=main_menu(), parse_mode="Markdown")
+
+    await message.answer(
+        "Выберите действие на клавиатуре ниже или напишите позывной игрока, чтобы открыть его профиль:",
+        reply_markup=main_menu(),
+    )
 
 @router.callback_query(F.data.startswith("auth_yes:"))
-async def cb_auth_yes(callback: CallbackQuery):
+async def auth_yes(callback: CallbackQuery):
     nick = callback.data.split(":", 1)[1]
     uid = str(callback.from_user.id)
-    nick_key = nick.lower()
+    update_activity(uid, callback.from_user.username, callback.from_user.full_name)
 
-    login_status_by_nick[nick_key] = "approved"
-    login_status_by_id[uid] = "approved"
+    if uid in db["users"]:
+        db["users"][uid]["logins"] = db["users"][uid].get("logins", 0) + 1
+
+    db["login_status"][nick.lower()] = {"status": "approved", "ts": time.time()}
+    save_data(db)
 
     await callback.message.edit_text(
-        f"✅ **Вход подтверждён!**\n\n"
-        f"Позывной: `{nick}`\n"
-        f"Доступ в терминал открыт. Возвращайтесь в приложение!",
-        parse_mode="Markdown"
+        f"✅ **Вход подтверждён!**\nАккаунт: `{nick}`\n\nВернитесь в приложение — доступ уже открыт.",
+        parse_mode="Markdown",
     )
     await callback.answer("Вход разрешён!")
 
-
 @router.callback_query(F.data.startswith("auth_no:"))
-async def cb_auth_no(callback: CallbackQuery):
+async def auth_no(callback: CallbackQuery):
     nick = callback.data.split(":", 1)[1]
     uid = str(callback.from_user.id)
-    nick_key = nick.lower()
+    update_activity(uid, callback.from_user.username, callback.from_user.full_name)
 
-    login_status_by_nick[nick_key] = "denied"
-    login_status_by_id[uid] = "denied"
+    db["login_status"][nick.lower()] = {"status": "denied", "ts": time.time()}
+    save_data(db)
 
     await callback.message.edit_text(
-        f"❌ **Попытка входа отклонена!**\n\n"
-        f"Доступ для позывного `{nick}` заблокирован.",
-        parse_mode="Markdown"
+        f"❌ **Запрос на вход отклонён владельцем.**\nАккаунт: `{nick}`",
+        parse_mode="Markdown",
     )
-    await callback.answer("Вход отклонен", show_alert=True)
+    await callback.answer("Запрос отклонён!", show_alert=True)
 
-
-dp.include_router(router)
-
-
-# --- HTTP API для связи с GitHub Pages (index.html) ---
-CORS_HEADERS = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-}
+# --- HTTP API для связи с index.html ---
+def cors_headers():
+    return {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+    }
 
 async def handle_options(request):
-    return web.Response(status=204, headers=CORS_HEADERS)
+    return web.Response(headers=cors_headers())
 
-async def api_health(request):
+async def handle_health(request):
     return web.json_response(
-        {"status": "ok", "bot": "DRONEPOINT_AREX_PRO_REGISTR_BOT"},
-        headers=CORS_HEADERS
+        {"status": "ok", "bot": "DRONEPOINT_AREX_PRO_REGISTR_BOT", "users_count": len(db["users"])},
+        headers=cors_headers(),
     )
 
-async def api_request_login(request):
+async def handle_request_login(request):
     try:
         data = await request.json()
-    except Exception:
-        return web.json_response({"ok": False, "error": "Invalid JSON"}, status=400, headers=CORS_HEADERS)
+        nick = str(data.get("nickname", "")).strip()
+        if not nick:
+            return web.json_response({"ok": False, "error": "Укажите позывной"}, status=400, headers=cors_headers())
 
-    nickname = str(data.get("nickname", "")).strip()
-    req_uid = str(data.get("user_id", "")).strip()
-
-    if not nickname:
-        return web.json_response({"ok": False, "error": "Укажите позывной"}, status=400, headers=CORS_HEADERS)
-
-    nick_key = nickname.lower()
-    target_uid = db["nicks"].get(nick_key)
-
-    # Если ник не найден в базе по имени, пробуем найти по user_id из Telegram WebApp
-    if not target_uid and req_uid in db["users"]:
-        saved_nick = db["users"][req_uid]
-        if saved_nick.lower() == nick_key:
-            target_uid = req_uid
-
-    if not target_uid:
-        return web.json_response(
-            {
-                "ok": False,
-                "error": "Позывной не зарегистрирован! Сначала напишите ник боту @DRONEPOINT_AREX_PRO_REGISTR_BOT"
-            },
-            headers=CORS_HEADERS
-        )
-
-    login_status_by_nick[nick_key] = "pending"
-    login_status_by_id[str(target_uid)] = "pending"
-
-    now_str = datetime.now().strftime("%H:%M:%S")
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="✅ Да", callback_data=f"auth_yes:{nickname}"),
-            InlineKeyboardButton(text="❌ Нет", callback_data=f"auth_no:{nickname}")
-        ]
-    ])
-
-    try:
-        if bot:
-            await bot.send_message(
-                chat_id=int(target_uid),
-                text=(
-                    f"🔐 **Запрос на вход в аккаунт**\n\n"
-                    f"Позывной: `{nickname}`\n"
-                    f"Время: `{now_str}`\n\n"
-                    f"**Это вы пытаетесь зайти в аккаунт?**"
-                ),
-                reply_markup=kb,
-                parse_mode="Markdown"
+        owner_uid = db["nicks"].get(nick.lower())
+        if not owner_uid:
+            return web.json_response(
+                {"ok": False, "error": "Позывной не зарегистрирован в боте"},
+                status=404,
+                headers=cors_headers(),
             )
-    except Exception as e:
-        logging.error(f"Ошибка отправки сообщения в ТГ: {e}")
-        return web.json_response(
-            {
-                "ok": False,
-                "error": "Бот не смог отправить сообщение. Откройте @DRONEPOINT_AREX_PRO_REGISTR_BOT и нажмите /start"
-            },
-            headers=CORS_HEADERS
+
+        db["login_status"][nick.lower()] = {"status": "pending", "ts": time.time()}
+        save_data(db)
+
+        kb = InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅ Да", callback_data=f"auth_yes:{nick}"),
+                InlineKeyboardButton(text="❌ Нет", callback_data=f"auth_no:{nick}"),
+            ]
+        ])
+        await bot.send_message(
+            chat_id=int(owner_uid),
+            text=f"🔐 **Запрос на вход в аккаунт**\nПозывной: `{nick}`\n\nЭто вы пытаетесь зайти в аккаунт?",
+            reply_markup=kb,
+            parse_mode="Markdown",
         )
+        return web.json_response({"ok": True, "status": "pending"}, headers=cors_headers())
+    except Exception as e:
+        return web.json_response({"ok": False, "error": str(e)}, status=500, headers=cors_headers())
 
-    return web.json_response({"ok": True, "status": "pending"}, headers=CORS_HEADERS)
+async def handle_check_login(request):
+    nick = request.query.get("nickname", "").strip().lower()
+    if not nick:
+        return web.json_response({"status": "none"}, headers=cors_headers())
+    rec = db["login_status"].get(nick, {"status": "none"})
+    if rec.get("status") == "approved":
+        owner_uid = db["nicks"].get(nick)
+        if owner_uid:
+            update_activity(owner_uid)
+    return web.json_response({"status": rec.get("status", "none")}, headers=cors_headers())
 
-
-async def api_check_login(request):
-    nickname = request.query.get("nickname", "").strip().lower()
-    req_uid = request.query.get("user_id", "").strip()
-
-    status = "pending"
-    if nickname and nickname in login_status_by_nick:
-        status = login_status_by_nick[nickname]
-    elif req_uid and req_uid in login_status_by_id:
-        status = login_status_by_id[req_uid]
-
-    return web.json_response({"ok": True, "status": status}, headers=CORS_HEADERS)
-
-
-async def api_reset_nick(request):
+async def handle_ping(request):
     try:
         data = await request.json()
+        nick = str(data.get("nickname", "")).strip().lower()
+        uid = str(data.get("user_id", "")).strip()
+        if nick and nick in db["nicks"]:
+            update_activity(db["nicks"][nick])
+        elif uid and uid in db["users"]:
+            update_activity(uid)
+        return web.json_response({"ok": True}, headers=cors_headers())
     except Exception:
-        data = {}
+        return web.json_response({"ok": False}, headers=cors_headers())
 
-    nickname = str(data.get("nickname", "")).strip().lower()
-    req_uid = str(data.get("user_id", "")).strip()
+async def handle_reset_api(request):
+    try:
+        data = await request.json()
+        nick = str(data.get("nickname", "")).strip().lower()
+        uid = str(data.get("user_id", "")).strip()
+        target_uid = db["nicks"].get(nick) or (uid if uid in db["users"] else None)
+        if target_uid and target_uid in db["users"]:
+            old_nick = db["users"][target_uid]["nick"]
+            db["nicks"].pop(old_nick.lower(), None)
+            db["login_status"].pop(old_nick.lower(), None)
+            del db["users"][target_uid]
+            save_data(db)
+        return web.json_response({"ok": True}, headers=cors_headers())
+    except Exception as e:
+        return web.json_response({"ok": False, "error": str(e)}, status=500, headers=cors_headers())
 
-    removed = False
-    if nickname and nickname in db["nicks"]:
-        uid = db["nicks"].pop(nickname)
-        db["users"].pop(uid, None)
-        login_status_by_nick.pop(nickname, None)
-        login_status_by_id.pop(uid, None)
-        removed = True
-
-    if req_uid and req_uid in db["users"]:
-        old_n = db["users"].pop(req_uid).lower()
-        db["nicks"].pop(old_n, None)
-        login_status_by_nick.pop(old_n, None)
-        login_status_by_id.pop(req_uid, None)
-        removed = True
-
-    if removed:
-        save_db(db)
-
-    return web.json_response({"ok": True, "reset": True}, headers=CORS_HEADERS)
-
-
-async def start_background_tasks(app):
-    if bot:
-        app["bot_task"] = asyncio.create_task(dp.start_polling(bot))
-
-async def cleanup_background_tasks(app):
-    if "bot_task" in app:
-        app["bot_task"].cancel()
-        try:
-            await app["bot_task"]
-        except asyncio.CancelledError:
-            pass
-
-def create_app():
+async def start_services():
+    dp.include_router(router)
     app = web.Application()
     app.router.add_route("OPTIONS", "/{tail:.*}", handle_options)
-    app.router.add_get("/", api_health)
-    app.router.add_post("/api/request-login", api_request_login)
-    app.router.add_get("/api/check-login", api_check_login)
-    app.router.add_post("/api/reset-nick", api_reset_nick)
-    app.on_startup.append(start_background_tasks)
-    app.on_cleanup.append(cleanup_background_tasks)
-    return app
+    app.router.add_get("/", handle_health)
+    app.router.add_post("/api/request-login", handle_request_login)
+    app.router.add_get("/api/check-login", handle_check_login)
+    app.router.add_post("/api/ping", handle_ping)
+    app.router.add_post("/api/reset", handle_reset_api)
+
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.getenv("PORT", 8000))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
 
 if __name__ == "__main__":
-    port = int(os.getenv("PORT", 8000))
-    web.run_app(create_app(), host="0.0.0.0", port=port)
+    asyncio.run(start_services())
