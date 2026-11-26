@@ -290,7 +290,6 @@ async def handle_text(message: Message):
         parse_mode="HTML"
     )
 
-# HTTP API ДЛЯ ПРИЛОЖЕНИЯ
 def cors_headers():
     return {
         "Access-Control-Allow-Origin": "*",
