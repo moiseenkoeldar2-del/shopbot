@@ -1,1330 +1,387 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>DRONEPOINT AREX PRO SHOP — Радар Терминал</title>
-<style>
-  :root {
-    --bg: #040b08;
-    --card: rgba(9, 24, 18, 0.9);
-    --border: rgba(0, 255, 136, 0.34);
-    --accent: #00ff88;
-    --primary: #00c46a;
-    --danger: #ff3b5c;
-    --gold: #ffd166;
-    --text: #e6f8ef;
-    --muted: #7aa391;
-  }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>DRONEPOINT AREX PRO SHOP</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #070b14;
+      --card: #0f172a;
+      --border: #1e293b;
+      --accent: #38bdf8;
+      --accent-glow: rgba(56, 189, 248, 0.35);
+      --green: #22c55e;
+      --red: #ef4444;
+      --gold: #facc15;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 16px; }
+    .container { max-width: 480px; margin: 0 auto; }
+    .header { text-align: center; padding: 12px 0 18px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+    .header h1 { font-size: 18px; letter-spacing: 1px; color: var(--accent); text-shadow: 0 0 12px var(--accent-glow); }
+    .header p { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
-  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 14px; }
+    .card h2 { font-size: 15px; margin-bottom: 10px; color: #e2e8f0; }
 
-  body {
-    font-family: 'Segoe UI', Roboto, monospace, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    margin: 0;
-    padding: 12px 12px 96px;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+    .input-group { margin-bottom: 12px; }
+    input {
+      width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+      background: #020617; color: var(--text); font-size: 15px; outline: none;
+    }
+    input:focus { border-color: var(--accent); }
 
-  /* === ФОН РАДАРА === */
-  .radar-bg {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    overflow: hidden;
-    background:
-      radial-gradient(circle at 50% 42%, rgba(0, 255, 136, 0.09) 0%, rgba(4, 11, 8, 0.97) 72%),
-      linear-gradient(rgba(0, 255, 136, 0.045) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0, 255, 136, 0.045) 1px, transparent 1px);
-    background-size: 100% 100%, 28px 28px, 28px 28px;
-  }
+    .btn {
+      width: 100%; padding: 12px; border: none; border-radius: 10px; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: 0.15s; margin-bottom: 8px; display: block; text-align: center; text-decoration: none;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--accent); color: #020617; }
+    .btn-green { background: var(--green); color: #020617; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-warn { background: rgba(250, 204, 21, 0.15); border: 1px solid var(--gold); color: var(--gold); }
 
-  .radar-circle {
-    position: absolute;
-    top: 42%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    border: 1px solid rgba(0, 255, 136, 0.16);
-  }
-  .radar-circle.c1 { width: 200px; height: 200px; }
-  .radar-circle.c2 { width: 390px; height: 390px; }
-  .radar-circle.c3 { width: 610px; height: 610px; }
+    .status-box {
+      padding: 12px; border-radius: 10px; font-size: 13px; line-height: 1.45;
+      background: #020617; border: 1px solid var(--border); margin-top: 10px; display: none;
+    }
+    .status-box.show { display: block; }
+    .status-pending { border-color: var(--gold); color: var(--gold); }
+    .status-ok { border-color: var(--green); color: var(--green); }
+    .status-err { border-color: var(--red); color: var(--red); }
 
-  .radar-sweep {
-    position: absolute;
-    top: 42%;
-    left: 50%;
-    width: 610px;
-    height: 610px;
-    margin-top: -305px;
-    margin-left: -305px;
-    border-radius: 50%;
-    background: conic-gradient(
-      from 0deg,
-      rgba(0, 255, 136, 0.28) 0deg,
-      rgba(0, 255, 136, 0.06) 45deg,
-      transparent 90deg
-    );
-    animation: radarSweep 4.8s linear infinite;
-  }
+    .hidden { display: none !important; }
 
-  .radar-blip {
-    position: absolute;
-    width: 6px;
-    height: 6px;
-    background: var(--accent);
-    border-radius: 50%;
-    box-shadow: 0 0 10px var(--accent);
-    animation: blipPulse 3s infinite ease-in-out;
-  }
+    /* Кликер и магазин */
+    .stats-row { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 14px; }
+    .stat-box { flex: 1; background: #020617; border: 1px solid var(--border); border-radius: 10px; padding: 10px; text-align: center; }
+    .stat-box span { display: block; font-size: 11px; color: var(--muted); }
+    .stat-box strong { font-size: 16px; color: var(--accent); }
 
-  @keyframes radarSweep {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
+    .tap-btn {
+      width: 170px; height: 170px; border-radius: 50%; margin: 14px auto; display: flex;
+      flex-direction: column; align-items: center; justify-content: center;
+      background: radial-gradient(circle, #0284c7 0%, #0f172a 75%);
+      border: 3px solid var(--accent); box-shadow: 0 0 25px var(--accent-glow);
+      color: #fff; font-weight: 700; font-size: 18px; cursor: pointer; user-select: none;
+    }
+    .tap-btn:active { transform: scale(0.95); }
 
-  @keyframes blipPulse {
-    0%, 100% { opacity: 0.15; transform: scale(0.8); }
-    50% { opacity: 1; transform: scale(1.4); }
-  }
+    .tabs { display: flex; gap: 6px; margin-bottom: 14px; }
+    .tab {
+      flex: 1; padding: 9px; border-radius: 8px; background: var(--card); border: 1px solid var(--border);
+      color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; text-align: center;
+    }
+    .tab.active { border-color: var(--accent); color: var(--accent); }
 
-  /* === 5-СЕКУНДНЫЙ ЗАГРУЗОЧНЫЙ ЭКРАН === */
-  .boot-screen {
-    position: fixed;
-    inset: 0;
-    z-index: 500;
-    background: #030906;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    text-align: center;
-    transition: opacity 0.4s ease;
-  }
-
-  .boot-radar {
-    width: 140px;
-    height: 140px;
-    border-radius: 50%;
-    border: 2px solid var(--accent);
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 0 30px rgba(0, 255, 136, 0.3), inset 0 0 20px rgba(0, 255, 136, 0.15);
-    margin-bottom: 20px;
-  }
-
-  .boot-radar::before {
-    content: "";
-    position: absolute;
-    inset: 28px;
-    border-radius: 50%;
-    border: 1px dashed rgba(0, 255, 136, 0.35);
-  }
-
-  .boot-radar::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: conic-gradient(from 0deg, rgba(0, 255, 136, 0.55), transparent 65deg);
-    animation: radarSweep 1.6s linear infinite;
-  }
-
-  .boot-title {
-    font-size: 18px;
-    font-weight: 900;
-    letter-spacing: 1.5px;
-    color: var(--accent);
-    text-shadow: 0 0 12px rgba(0, 255, 136, 0.45);
-    margin-bottom: 6px;
-  }
-
-  .boot-log {
-    font-size: 12px;
-    color: var(--muted);
-    min-height: 18px;
-    margin-bottom: 14px;
-  }
-
-  .boot-bar-wrap {
-    width: 100%;
-    max-width: 280px;
-    height: 10px;
-    border-radius: 20px;
-    background: rgba(0, 255, 136, 0.12);
-    border: 1px solid var(--border);
-    overflow: hidden;
-  }
-
-  .boot-bar-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #00c46a, #00ff88);
-    box-shadow: 0 0 12px var(--accent);
-    transition: width 0.1s linear;
-  }
-
-  /* === МОДАЛКИ ОБУЧЕНИЯ И РЕГИСТРАЦИИ === */
-  .overlay-screen {
-    position: fixed;
-    inset: 0;
-    z-index: 300;
-    background: rgba(3, 9, 6, 0.96);
-    display: none;
-    align-items: center;
-    justify-content: center;
-    padding: 16px;
-  }
-
-  #mainApp {
-    position: relative;
-    z-index: 2;
-    max-width: 480px;
-    margin: 0 auto;
-    display: none;
-  }
-
-  .card {
-    background: var(--card);
-    backdrop-filter: blur(8px);
-    border-radius: 16px;
-    padding: 15px;
-    margin-bottom: 12px;
-    border: 1px solid var(--border);
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
-  }
-
-  .header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-
-  .badge {
-    font-size: 10px;
-    padding: 4px 9px;
-    border-radius: 20px;
-    background: rgba(0, 255, 136, 0.12);
-    color: var(--accent);
-    border: 1px solid rgba(0, 255, 136, 0.35);
-    font-weight: 700;
-    white-space: nowrap;
-  }
-
-  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-  .stat-box {
-    background: rgba(0, 0, 0, 0.5);
-    padding: 10px;
-    border-radius: 12px;
-    text-align: center;
-    border: 1px solid rgba(0, 255, 136, 0.2);
-  }
-  .stat-val { font-size: 17px; font-weight: 800; color: var(--accent); margin-top: 3px; }
-
-  .btn {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 13px;
-    cursor: pointer;
-    margin-top: 8px;
-    transition: transform 0.08s, opacity 0.15s;
-  }
-  .btn:active { transform: scale(0.97); }
-  .btn-primary { background: rgba(0, 255, 136, 0.16); color: var(--accent); border-color: var(--accent); }
-  .btn-success { background: var(--accent); color: #03170d; border-color: var(--accent); }
-  .btn-gold { background: rgba(255, 209, 102, 0.18); color: var(--gold); border-color: var(--gold); }
-  .btn-danger { background: rgba(255, 59, 92, 0.18); color: var(--danger); border-color: var(--danger); }
-  .btn-disabled { background: #1c2822; color: var(--muted); border-color: #2c3e35; }
-
-  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-
-  .btn-tap {
-    background: radial-gradient(circle, rgba(0, 255, 136, 0.32) 0%, rgba(6, 36, 22, 0.96) 100%);
-    color: var(--accent);
-    border: 2px solid var(--accent);
-    font-size: 24px;
-    padding: 30px 16px;
-    border-radius: 22px;
-    box-shadow: 0 0 26px rgba(0, 255, 136, 0.25);
-    user-select: none;
-    touch-action: manipulation;
-  }
-
-  input {
-    width: 100%;
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid var(--border);
-    background: rgba(0, 0, 0, 0.6);
-    color: var(--text);
-    margin-top: 8px;
-    font-size: 14px;
-    outline: none;
-  }
-  input:focus { border-color: var(--accent); }
-
-  .status-box {
-    margin-top: 10px;
-    padding: 10px 12px;
-    border-radius: 10px;
-    font-size: 12px;
-    line-height: 1.4;
-    background: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(0, 255, 136, 0.25);
-    color: var(--text);
-  }
-  .status-box.err { border-color: var(--danger); color: #ff8fa3; }
-  .status-box.ok { border-color: var(--accent); color: var(--accent); }
-
-  .card-num {
-    background: rgba(0, 0, 0, 0.55);
-    padding: 11px;
-    border-radius: 10px;
-    text-align: center;
-    font-family: monospace;
-    font-size: 15px;
-    cursor: pointer;
-    border: 1px dashed var(--accent);
-    margin: 8px 0;
-    color: var(--accent);
-  }
-
-  /* === НИЖНЕЕ МЕНЮ === */
-  .nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: rgba(5, 14, 10, 0.96);
-    backdrop-filter: blur(10px);
-    display: none;
-    border-top: 1px solid var(--border);
-    z-index: 50;
-  }
-  .nav button {
-    flex: 1;
-    background: none;
-    border: none;
-    color: var(--muted);
-    padding: 12px 2px;
-    font-size: 12px;
-    cursor: pointer;
-  }
-  .nav button.active {
-    color: var(--accent);
-    font-weight: 700;
-    background: rgba(0, 255, 136, 0.08);
-  }
-
-  .tab { display: none; }
-  .tab.active { display: block; }
-  .small { font-size: 12px; color: var(--muted); line-height: 1.45; }
-
-  .modal {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.85);
-    justify-content: center;
-    align-items: center;
-    padding: 16px;
-    z-index: 400;
-  }
-  .modal-content {
-    background: #091812;
-    padding: 20px;
-    border-radius: 18px;
-    width: 100%;
-    max-width: 400px;
-    border: 1px solid var(--border);
-  }
-
-  /* === КОТИК И КНОПКА ПІДТРИМАТИ КАНАЛ === */
-  .cat-widget {
-    position: fixed;
-    right: 12px;
-    bottom: 66px;
-    z-index: 60;
-    display: none;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .support-cta {
-    display: none;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 14px;
-    border-radius: 24px;
-    background: linear-gradient(135deg, #00ff88 0%, #00c46a 100%);
-    color: #03170d;
-    font-weight: 800;
-    font-size: 13px;
-    text-decoration: none;
-    border: 2px solid #ffffff;
-    box-shadow: 0 4px 20px rgba(0, 255, 136, 0.55);
-    animation: popSlideIn 0.32s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
-    white-space: nowrap;
-  }
-
-  .support-cta.visible {
-    display: inline-flex;
-  }
-
-  @keyframes popSlideIn {
-    0% { opacity: 0; transform: translateX(22px) scale(0.78); }
-    100% { opacity: 1; transform: translateX(0) scale(1); }
-  }
-
-  .cat-avatar {
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 30% 30%, #153527, #07140e);
-    border: 2px solid var(--accent);
-    box-shadow: 0 0 18px rgba(0, 255, 136, 0.45);
-    cursor: pointer;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: catFloat 2.8s ease-in-out infinite;
-  }
-
-  .cat-avatar.meow-jump {
-    animation: catJump 0.45s ease;
-  }
-
-  @keyframes catFloat {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-5px); }
-  }
-
-  @keyframes catJump {
-    0% { transform: scale(1) translateY(0); }
-    35% { transform: scale(1.16, 0.9) translateY(-12px); }
-    70% { transform: scale(0.95, 1.08) translateY(2px); }
-    100% { transform: scale(1) translateY(0); }
-  }
-
-  .cat-ear-l { transform-origin: 22px 20px; animation: earTwitch 4s infinite; }
-  .cat-tail { transform-origin: 48px 46px; animation: tailWag 2.2s ease-in-out infinite; }
-
-  @keyframes earTwitch {
-    0%, 90%, 100% { transform: rotate(0deg); }
-    93% { transform: rotate(-12deg); }
-    96% { transform: rotate(4deg); }
-  }
-
-  @keyframes tailWag {
-    0%, 100% { transform: rotate(-6deg); }
-    50% { transform: rotate(12deg); }
-  }
-
-  .meow-bubble {
-    position: absolute;
-    top: -26px;
-    right: 4px;
-    background: var(--accent);
-    color: #03150c;
-    font-size: 11px;
-    font-weight: 800;
-    padding: 2px 8px;
-    border-radius: 12px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s, transform 0.2s;
-  }
-
-  .meow-bubble.show {
-    opacity: 1;
-    transform: translateY(-4px);
-  }
-</style>
+    .shop-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 12px; background: #020617; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px;
+    }
+    .shop-item h4 { font-size: 14px; }
+    .shop-item p { font-size: 12px; color: var(--muted); }
+    .shop-item button { width: auto; padding: 8px 12px; margin: 0; }
+  </style>
 </head>
 <body>
-
-  <!-- ФОН РАДАРА -->
-  <div class="radar-bg">
-    <div class="radar-circle c1"></div>
-    <div class="radar-circle c2"></div>
-    <div class="radar-circle c3"></div>
-    <div class="radar-sweep"></div>
-    <div class="radar-blip" style="top: 25%; left: 66%;"></div>
-    <div class="radar-blip" style="top: 56%; left: 28%; animation-delay: 1.4s;"></div>
-    <div class="radar-blip" style="top: 38%; left: 46%; animation-delay: 2.2s;"></div>
-  </div>
-
-  <!-- 1. ЗАГРУЗКА РАДАРА (5 СЕКУНД) -->
-  <div class="boot-screen" id="bootScreen">
-    <div class="boot-radar"></div>
-    <div class="boot-title">DRONEPOINT AREX PRO SHOP</div>
-    <div class="boot-log" id="bootLog">Сканирование частот радара... 0%</div>
-    <div class="boot-bar-wrap">
-      <div class="boot-bar-fill" id="bootBar"></div>
+  <div class="container">
+    <div class="header">
+      <h1>DRONEPOINT AREX PRO SHOP</h1>
+      <p>Регистрация: @DRONEPOINT_AREX_PRO_REGISTR_BOT</p>
     </div>
-  </div>
 
-  <!-- 2. ПОШАГОВОЕ ОБУЧЕНИЕ -->
-  <div class="overlay-screen" id="tutorialScreen">
-    <div class="card" style="max-width:400px; width:100%;">
-      <div class="header" style="margin-bottom:8px;">
-        <span class="badge" id="tutStepBadge">ШАГ 1 / 3</span>
-        <span class="small" style="color:var(--accent); font-weight:700;">DRONEPOINT AREX PRO</span>
-      </div>
-      <h3 id="tutTitle" style="margin:6px 0; color:var(--accent);">📡 Добро пожаловать в терминал</h3>
-      <p id="tutText" class="small">Здесь вы можете копить монеты в кликере, открывать доступ в магазине и управлять своими ключами.</p>
-      <div class="btn-row">
-        <button class="btn btn-disabled" onclick="finishTutorial()">Пропустить</button>
-        <button class="btn btn-success" id="tutNextBtn" onclick="nextTutorialStep()">Далее ➡</button>
+    <!-- ЭКРАН ВХОДА И РЕГИСТРАЦИИ -->
+    <div id="authScreen">
+      <div class="card">
+        <h2>🔐 Вход / Регистрация в терминале</h2>
+        <p style="font-size: 12px; color: var(--muted); margin-bottom: 12px;">
+          Правило: <b>1 регистрация на человека</b>. Для сброса привязки введите <code>/resetник</code>.
+        </p>
+        <div class="input-group">
+          <input type="text" id="nickInput" placeholder="Введите ваш ник (или /resetник)" autocomplete="off" />
+        </div>
+
+        <button class="btn btn-outline" onclick="checkNick()">🔍 Проверить ник</button>
+        <button class="btn btn-green" onclick="registerNick()">📝 Зарегистрировать ник</button>
+        <button class="btn btn-primary" onclick="sendLoginToBot()">📨 Выслать вход в ТГ</button>
+        <a class="btn btn-warn" href="https://t.me/DRONEPOINT_AREX_PRO_REGISTR_BOT" target="_blank">
+          🤖 Открыть @DRONEPOINT_AREX_PRO_REGISTR_BOT
+        </a>
+
+        <div id="authStatus" class="status-box"></div>
       </div>
     </div>
-  </div>
 
-  <!-- 3. ОБЯЗАТЕЛЬНАЯ РЕГИСТРАЦИЯ (1 ЧЕЛОВЕК = 1 РАЗ) И ВХОД ЧЕРЕЗ БОТА -->
-  <div class="overlay-screen" id="authScreen">
-    <div class="card" style="max-width:410px; width:100%;">
-      <div class="header" style="margin-bottom:6px;">
-        <h3 style="margin:0; color:var(--accent);">🔐 Вход и Регистрация</h3>
-        <button class="btn btn-primary" style="width:auto; padding:5px 10px; margin:0; font-size:11px;" onclick="openTutorial()">📖 Обучение</button>
-      </div>
-      <p class="small">
-        <strong>Правило 1 аккаунта:</strong> один человек (один Telegram ID / одно устройство) может зарегистрироваться <strong>только 1 раз</strong>.
-      </p>
-
-      <div id="botLinkBox" class="card-num" onclick="openBotLink()">🤖 Открыть бота регистрации</div>
-
-      <input type="text" id="nickInput" placeholder="Введите ваш ник..." autocomplete="off">
-
-      <div class="btn-row">
-        <button class="btn btn-primary" onclick="checkNickBtn()">🔍 Проверить ник</button>
-        <button class="btn btn-gold" id="regOnceBtn" onclick="registerOnceBtn()">⚡ Зарегистрировать</button>
-      </div>
-
-      <button class="btn btn-success" onclick="sendLoginRequestBtn()">📨 Выслать вход в ТГ</button>
-
-      <div class="status-box" id="authStatus">
-        Введите свой ник. Если вы ещё не регистрировались — отправьте ник боту или нажмите «Зарегистрировать» (доступно только 1 раз).
-      </div>
-    </div>
-  </div>
-
-  <!-- 4. ОСНОВНОЕ РАДАР-МЕНЮ (БЕЗ ИГРЫ) -->
-  <div id="mainApp">
-    <div class="card">
-      <div class="header">
+    <!-- ОСНОВНОЙ ТЕРМИНАЛ ПОСЛЕ ПОДТВЕРЖДЕНИЯ В БОТЕ -->
+    <div id="mainScreen" class="hidden">
+      <div class="card" style="display:flex; justify-content:space-between; align-items:center;">
         <div>
-          <strong id="userName" style="font-size:15px;">Боец</strong>
-          <div class="small" id="userHandle">ID: —</div>
+          <span style="font-size:12px; color:var(--muted);">Оператор:</span>
+          <strong id="activeNickDisplay" style="color:var(--green); display:block;">—</strong>
         </div>
-        <span class="badge" id="vipBadge">📡 AREX PRO SHOP</span>
+        <button class="btn btn-outline" style="width:auto; margin:0; padding:6px 10px; font-size:12px;" onclick="logout()">Выйти</button>
       </div>
-      <div class="stats">
-        <div class="stat-box">
-          <div class="small">Баланс монет</div>
-          <div class="stat-val" id="coinsDisplay">0 🪙</div>
+
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('clicker', this)">⚡ Кликер</div>
+        <div class="tab" onclick="switchTab('shop', this)">🛒 Магазин</div>
+        <div class="tab" onclick="switchTab('keys', this)">🔑 Ключи</div>
+      </div>
+
+      <!-- КЛИКЕР -->
+      <div id="tab-clicker" class="card">
+        <div class="stats-row">
+          <div class="stat-box"><span>Монеты</span><strong id="coinsVal">0</strong></div>
+          <div class="stat-box"><span>Энергия</span><strong id="energyVal">100/100</strong></div>
+          <div class="stat-box"><span>За клик</span><strong id="powerVal">+1</strong></div>
         </div>
-        <div class="stat-box">
-          <div class="small">Сила (+1 / 5 мин)</div>
-          <div class="stat-val" id="powerDisplay">100 / 100 ⚡</div>
+        <div class="tap-btn" onclick="tapDrone()">
+          <span>TAP</span>
+          <span style="font-size:12px; font-weight:400; margin-top:4px;">AREX PRO</span>
         </div>
-      </div>
-    </div>
-
-    <!-- ВКЛАДКА 1: КЛИКЕР -->
-    <div id="tab-clicker" class="tab active">
-      <div class="card" style="text-align:center;">
-        <button class="btn btn-tap" id="tapBtn" onclick="handleTap()">КЛИК<br><span style="font-size:14px; font-weight:normal;" id="tapInfo">+1 🪙 / -1 ⚡</span></button>
-        <p class="small" style="margin-top:10px;">Если сила 0 — клик отнимает 2 монеты!</p>
-        <p><strong id="goalText">0 / 100 000 🪙</strong> до бесплатного ключа</p>
-        <button class="btn btn-success" onclick="claimFreeKey()">🎁 Забрать ключ за 100 000 монет</button>
-      </div>
-
-      <div class="card">
-        <h3 style="margin:0 0 10px; color:var(--accent);">⚡ Прокачки</h3>
-        <div style="margin-bottom:12px;">
-          <strong>+25 макс. силы</strong> (Уровень: <span id="powerLvl">1</span>)
-          <button class="btn btn-primary" onclick="buyMaxPower()">Купить — <span id="powerCost">500</span> 🪙</button>
-        </div>
-        <div>
-          <strong>+1 монета за клик</strong> (Сила клика: <span id="tapLvl">1</span>)
-          <button class="btn btn-primary" onclick="buyTapPower()">Купить — <span id="tapCost">1000</span> 🪙</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3 style="margin:0 0 8px; color:var(--accent);">🎟 Код от администратора</h3>
-        <input type="text" id="adminCodeInput" placeholder="Введите код...">
-        <button class="btn btn-primary" onclick="activateAdminCode()">Активировать код</button>
-      </div>
-    </div>
-
-    <!-- ВКЛАДКА 2: МАГАЗИН -->
-    <div id="tab-shop" class="tab">
-      <div class="card">
-        <h3 style="margin:0 0 6px; color:var(--accent);">📡 Полный доступ DRONEPOINT AREX PRO</h3>
-        <p class="small">Открывает все функции радар-меню и убирает ограничения демо-версии.</p>
-        <button class="btn btn-success" onclick="openPay('Полный доступ AREX PRO', 20)">Купить — 20 грн</button>
-      </div>
-
-      <div class="card">
-        <h3 style="margin:0 0 6px; color:var(--accent);">🔑 Дополнительный ключ</h3>
-        <p class="small">Второй лицензионный ключ для друга или второго устройства.</p>
-        <button class="btn btn-primary" onclick="openPay('Дополнительный ключ', 25)">Купить — 25 грн</button>
-      </div>
-
-      <div class="card">
-        <h3 style="margin:0 0 6px; color:var(--gold);">👑 VIP-пакет + бонус 25 000 🪙</h3>
-        <p class="small">VIP-статус в системе + моментальное пополнение баланса.</p>
-        <button class="btn btn-gold" onclick="openPay('VIP-пакет + 25 000 монет', 100)">Купить VIP — 100 грн</button>
-      </div>
-
-      <div class="card">
-        <h3 style="margin:0 0 6px; color:var(--accent);">ℹ Поддержка</h3>
-        <p class="small" style="margin:0;">
-          Разработчик: <strong>@eldar3275</strong><br>
-          Бот магазина: <strong>@dronpint_arex_pro_Shop_bot</strong>
+        <p style="text-align:center; font-size:12px; color:var(--muted);">
+          Бесплатный ключ за 100 000 монет
         </p>
       </div>
-    </div>
 
-    <!-- ВКЛАДКА 3: КЛЮЧИ И АККАУНТ -->
-    <div id="tab-keys" class="tab">
-      <div class="card">
-        <h3 style="margin:0 0 8px; color:var(--accent);">🔐 Ваши лицензионные ключи</h3>
-        <div id="keysContainer" class="small">У вас пока нет активированных ключей.</div>
+      <!-- МАГАЗИН -->
+      <div id="tab-shop" class="card hidden">
+        <h2>🛒 Магазин ключей</h2>
+        <div class="shop-item">
+          <div><h4>Ключ на 1 день</h4><p>Доступ к AREX PRO</p></div>
+          <button class="btn btn-primary" onclick="openPay('Ключ 1 день', '20 грн')">20 грн</button>
+        </div>
+        <div class="shop-item">
+          <div><h4>Ключ на 3 дня</h4><p>Доступ к AREX PRO</p></div>
+          <button class="btn btn-primary" onclick="openPay('Ключ 3 дня', '25 грн')">25 грн</button>
+        </div>
+        <div class="shop-item">
+          <div><h4>Ключ на 30 дней</h4><p>Полный доступ</p></div>
+          <button class="btn btn-primary" onclick="openPay('Ключ 30 дней', '100 грн')">100 грн</button>
+        </div>
+        <div id="payBox" class="status-box status-pending"></div>
       </div>
 
-      <div class="card">
-        <h3 style="margin:0 0 8px; color:var(--accent);">🔑 Активация ключа</h3>
-        <input type="text" id="promoInput" placeholder="Введите лицензионный ключ...">
-        <button class="btn btn-success" onclick="activatePromo()">🔑 Активировать ключ</button>
-      </div>
-
-      <div class="card">
-        <h3 style="margin:0 0 6px; color:var(--accent);">👤 Ваш закреплённый аккаунт</h3>
-        <p class="small" id="accountLockInfo">Ник закреплён навсегда (1 регистрация на человека).</p>
-        <button class="btn btn-danger" onclick="logoutSession()">🚪 Выйти из сессии</button>
+      <!-- КЛЮЧИ -->
+      <div id="tab-keys" class="card hidden">
+        <h2>🔑 Ваши ключи и сброс</h2>
+        <p style="font-size:13px; color:var(--muted); margin-bottom:10px;">
+          Активных ключей: 0. Введите <code>/resetник</code>, чтобы отвязать ник.
+        </p>
+        <input type="text" id="serviceCmdInput" placeholder="Введите команду (например /resetник)" style="margin-bottom:8px;" />
+        <button class="btn btn-outline" onclick="runServiceCmd()">Выполнить</button>
       </div>
     </div>
   </div>
 
-  <!-- КОТИК СО ЗВУКОМ МЯУ И КНОПКОЙ ПІДТРИМАТИ КАНАЛ -->
-  <div class="cat-widget" id="catWidget">
-    <a
-      id="supportChannelBtn"
-      class="support-cta"
-      href="https://send.monobank.ua/jar/27YAyVQ9Pi"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      💛 Підтримати канал
-    </a>
+  <script>
+    // Укажите URL вашего запущенного бота регистрации (bot_registr.py)
+    const API_URL = "https://ВАШ_ДОМЕН_ИЛИ_IP:8080";
 
-    <div class="cat-avatar" id="radarCat" onclick="petCat()" title="Нажми на котика!">
-      <div class="meow-bubble" id="meowBubble">Мяу! 🐾</div>
-      <svg width="46" height="46" viewBox="0 0 64 64" fill="none">
-        <path class="cat-tail" d="M46 46 Q58 42 54 30" stroke="#00ff88" stroke-width="3.2" stroke-linecap="round"/>
-        <circle cx="32" cy="30" r="15" fill="#0d261b" stroke="#00ff88" stroke-width="2.2"/>
-        <polygon class="cat-ear-l" points="19,20 17,7 28,15" fill="#0d261b" stroke="#00ff88" stroke-width="2.2" stroke-linejoin="round"/>
-        <polygon points="45,20 47,7 36,15" fill="#0d261b" stroke="#00ff88" stroke-width="2.2" stroke-linejoin="round"/>
-        <rect x="21" y="22" width="9" height="6" rx="3" fill="#00ff88"/>
-        <rect x="34" y="22" width="9" height="6" rx="3" fill="#00ff88"/>
-        <line x1="30" y1="25" x2="34" y2="25" stroke="#00ff88" stroke-width="2"/>
-        <polygon points="30,30 34,30 32,32.5" fill="#ffd166"/>
-        <path d="M29 34 Q32 37 35 34" stroke="#00ff88" stroke-width="1.8" stroke-linecap="round"/>
-        <line x1="14" y1="29" x2="21" y2="30" stroke="#00ff88" stroke-width="1.5"/>
-        <line x1="43" y1="30" x2="50" y2="29" stroke="#00ff88" stroke-width="1.5"/>
-      </svg>
-    </div>
-  </div>
-
-  <!-- НИЖНЕЕ МЕНЮ -->
-  <nav class="nav" id="bottomNav">
-    <button class="active" onclick="switchTab('clicker', this)">🪙 Кликер</button>
-    <button onclick="switchTab('shop', this)">🛒 Магазин</button>
-    <button onclick="switchTab('keys', this)">🔑 Ключи</button>
-  </nav>
-
-  <!-- МОДАЛКА ОПЛАТЫ -->
-  <div class="modal" id="payModal">
-    <div class="modal-content">
-      <h3 style="margin-top:0; color:var(--accent);">💳 Оплата заказа</h3>
-      <p class="small">Товар: <strong id="payItemName" style="color:var(--text);">Товар</strong></p>
-      <p class="small">Переведите <strong id="payItemPrice" style="color:var(--accent);">20 грн</strong> на карту:</p>
-      <div class="card-num" onclick="copyText('4441 1144 3394 8724')">4441 1144 3394 8724 📋</div>
-      <p class="small">Прикрепить скриншот чека:</p>
-      <input type="file" accept="image/*">
-      <button class="btn btn-success" onclick="confirmOrder()">✅ Я оплатил</button>
-      <button class="btn btn-disabled" onclick="closePay()">Отмена</button>
-    </div>
-  </div>
-
-<script>
-  const BOT_TOKEN = '9209471297:AAGnC8A3Iqd09bAe0P60-tREawhZ1MVE1Eg';
-  const API_BASE = `https://api.telegram.org/bot${BOT_TOKEN}`;
-  const MEOW_AUDIO_FILE = 'u_6ekfl947a2-cat-meow-297927_Uhd2L4.mp3';
-
-  // Безопасное хранилище (не падает в режиме инкогнито / iframe)
-  const memStore = {};
-  function safeGet(k, defVal) {
-    try {
-      const v = localStorage.getItem(k);
-      return v !== null ? v : (memStore[k] ?? defVal);
-    } catch (e) {
-      return memStore[k] ?? defVal;
-    }
-  }
-  function safeSet(k, v) {
-    memStore[k] = String(v);
-    try { localStorage.setItem(k, String(v)); } catch (e) {}
-  }
-
-  // Генерируем уникальный ID устройства, если открыто не внутри Telegram Mini App
-  function getDeviceFingerprint() {
-    let fp = safeGet('arex_device_fp', '');
-    if (!fp) {
-      fp = 'DEV-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-      safeSet('arex_device_fp', fp);
-    }
-    return fp;
-  }
-
-  let tgUser = null;
-  try {
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand();
-      tgUser = window.Telegram.WebApp.initDataUnsafe?.user || null;
-    }
-  } catch (e) {}
-
-  // Уникальный идентификатор человека (Telegram ID или ID устройства)
-  const CURRENT_PERSON_ID = tgUser?.id ? String(tgUser.id) : getDeviceFingerprint();
-
-  // База пользователей:
-  // nickToUser: { "el": { chatId: "12345", personId: "12345", nick: "El" } }
-  // personToNick: { "12345": "El", "DEV-XXXX": "El" } -> ЖЁСТКАЯ ПРИВЯЗКА 1 ЧЕЛОВЕК = 1 НИК
-  const db = {
-    nickToUser: JSON.parse(safeGet('arex_nick_to_user', '{}')),
-    personToNick: JSON.parse(safeGet('arex_person_to_nick', '{}')),
-    lastUpdateId: Number(safeGet('arex_last_update_id', 0)),
-    processedUpdates: new Set(),
-    botUsername: safeGet('arex_bot_username', '')
-  };
-
-  function saveDb() {
-    safeSet('arex_nick_to_user', JSON.stringify(db.nickToUser));
-    safeSet('arex_person_to_nick', JSON.stringify(db.personToNick));
-    safeSet('arex_last_update_id', db.lastUpdateId);
-    if (db.botUsername) safeSet('arex_bot_username', db.botUsername);
-  }
-
-  const state = {
-    loggedNick: safeGet('arex_logged_nick', ''),
-    tutDone: safeGet('arex_tut_done', '') === 'true',
-    coins: Number(safeGet('arex_coins', 0)),
-    power: Number(safeGet('arex_power', 100)),
-    maxPower: Number(safeGet('arex_maxPower', 100)),
-    tapPower: Number(safeGet('arex_tapPower', 1)),
-    powerLvl: Number(safeGet('arex_powerLvl', 1)),
-    vip: safeGet('arex_vip', '') === 'true',
-    keys: JSON.parse(safeGet('arex_keys', '[]'))
-  };
-
-  function saveState() {
-    safeSet('arex_logged_nick', state.loggedNick);
-    safeSet('arex_tut_done', state.tutDone);
-    safeSet('arex_coins', state.coins);
-    safeSet('arex_power', state.power);
-    safeSet('arex_maxPower', state.maxPower);
-    safeSet('arex_tapPower', state.tapPower);
-    safeSet('arex_powerLvl', state.powerLvl);
-    safeSet('arex_vip', state.vip);
-    safeSet('arex_keys', JSON.stringify(state.keys));
-    updateUI();
-  }
-
-  // === 1. ЗАГРУЗОЧНЫЙ ЭКРАН РОВНО 5 СЕКУНД ===
-  let bootFinished = false;
-  function runBootLoader() {
-    const start = Date.now();
-    const duration = 5000;
-    const bar = document.getElementById('bootBar');
-    const log = document.getElementById('bootLog');
-
-    const stages = [
-      'Сканирование частот радара...',
-      'Проверка реестра уникальных пользователей...',
-      'Синхронизация с Telegram шлюзом...',
-      'Калибровка тактического модуля...',
-      'Запуск DRONEPOINT AREX PRO SHOP...'
-    ];
-
-    const timer = setInterval(() => {
-      const elapsed = Date.now() - start;
-      const pct = Math.min(100, Math.floor((elapsed / duration) * 100));
-      bar.style.width = pct + '%';
-      const stageIdx = Math.min(stages.length - 1, Math.floor((pct / 100) * stages.length));
-      log.innerText = `${stages[stageIdx]} ${pct}%`;
-
-      if (elapsed >= duration) {
-        clearInterval(timer);
-        finishBoot();
-      }
-    }, 80);
-
-    // Аварийный таймер на 5.5 сек
-    setTimeout(finishBoot, 5500);
-  }
-
-  function finishBoot() {
-    if (bootFinished) return;
-    bootFinished = true;
-    const bootEl = document.getElementById('bootScreen');
-    bootEl.style.opacity = '0';
-    setTimeout(() => {
-      bootEl.style.display = 'none';
-      routeAfterBoot();
-    }, 350);
-  }
-
-  function routeAfterBoot() {
-    initTelegramBot();
-    if (!state.tutDone) {
-      openTutorial();
-    } else if (!state.loggedNick) {
-      openAuthScreen();
-    } else {
-      openMainTerminal();
-    }
-  }
-
-  // === 2. ПОШАГОВОЕ ОБУЧЕНИЕ ===
-  const tutorialSteps = [
-    {
-      title: '📡 Добро пожаловать в DRONEPOINT AREX PRO SHOP',
-      text: 'Вы вошли в закрытый тактический терминал. Внутри доступны кликер монет, прокачка энергии, магазин и лицензионные ключи.'
-    },
-    {
-      title: '🔒 Правило: 1 человек = 1 регистрация',
-      text: 'Каждый пользователь может зарегистрировать только ОДИН ник за всё время. Повторная регистрация второго ника заблокирована системой.'
-    },
-    {
-      title: '📨 Подтверждение входа через Telegram',
-      text: 'Введите свой ник и нажмите «Выслать вход в ТГ». Бот отправит вам сообщение «Это вы заходите в акк?» с кнопками «Да» и «Нет».'
-    }
-  ];
-  let currentTutStep = 0;
-
-  function openTutorial() {
-    currentTutStep = 0;
-    renderTutorialStep();
-    document.getElementById('authScreen').style.display = 'none';
-    document.getElementById('tutorialScreen').style.display = 'flex';
-  }
-
-  function renderTutorialStep() {
-    const s = tutorialSteps[currentTutStep];
-    document.getElementById('tutStepBadge').innerText = `ШАГ ${currentTutStep + 1} / ${tutorialSteps.length}`;
-    document.getElementById('tutTitle').innerText = s.title;
-    document.getElementById('tutText').innerText = s.text;
-    document.getElementById('tutNextBtn').innerText =
-      currentTutStep === tutorialSteps.length - 1 ? '✅ Начать' : 'Далее ➡';
-  }
-
-  function nextTutorialStep() {
-    if (currentTutStep < tutorialSteps.length - 1) {
-      currentTutStep++;
-      renderTutorialStep();
-    } else {
-      finishTutorial();
-    }
-  }
-
-  function finishTutorial() {
-    state.tutDone = true;
-    saveState();
-    document.getElementById('tutorialScreen').style.display = 'none';
-    if (!state.loggedNick) {
-      openAuthScreen();
-    } else {
-      openMainTerminal();
-    }
-  }
-
-  // === 3. РЕГИСТРАЦИЯ (СТРОГО 1 РАЗ НА ЧЕЛОВЕКА) И ВХОД ЧЕРЕЗ БОТА ===
-  let isPolling = false;
-  let pendingLoginNick = '';
-
-  function openAuthScreen() {
-    document.getElementById('mainApp').style.display = 'none';
-    document.getElementById('bottomNav').style.display = 'none';
-    document.getElementById('catWidget').style.display = 'none';
-    document.getElementById('authScreen').style.display = 'flex';
-
-    // Если этот человек УЖЕ регистрировался раньше — подставляем его единственный ник и блокируем новую регистрацию
-    const existingNick = db.personToNick[CURRENT_PERSON_ID];
-    if (existingNick) {
-      document.getElementById('nickInput').value = existingNick;
-      const regBtn = document.getElementById('regOnceBtn');
-      regBtn.className = 'btn btn-disabled';
-      regBtn.innerText = '🔒 Уже зареган';
-      setAuthStatus(`✅ Вы уже зарегистрированы как «${existingNick}». Повторная регистрация запрещена (1 человек = 1 аккаунт). Нажмите «Выслать вход в ТГ».`, 'ok');
-    }
-  }
-
-  function setAuthStatus(msg, type = '') {
-    const box = document.getElementById('authStatus');
-    box.className = 'status-box' + (type ? ' ' + type : '');
-    box.innerText = msg;
-  }
-
-  function openBotLink() {
-    const uname = db.botUsername || 'dronpint_arex_pro_Shop_bot';
-    window.open(`https://t.me/${uname}`, '_blank');
-  }
-
-  async function initTelegramBot() {
-    try {
-      await fetch(`${API_BASE}/deleteWebhook?drop_pending_updates=false`);
-      const meRes = await fetch(`${API_BASE}/getMe`);
-      const meData = await meRes.json();
-      if (meData.ok && meData.result?.username) {
-        db.botUsername = meData.result.username;
-        saveDb();
-        document.getElementById('botLinkBox').innerText = `🤖 Открыть бота @${db.botUsername}`;
-      }
-    } catch (e) {}
-
-    setInterval(pollBotUpdates, 2200);
-    pollBotUpdates();
-  }
-
-  async function pollBotUpdates() {
-    if (isPolling) return;
-    isPolling = true;
-    try {
-      const offsetParam = db.lastUpdateId > 0 ? `?offset=${db.lastUpdateId + 1}&limit=25` : '?limit=25';
-      const res = await fetch(`${API_BASE}/getUpdates${offsetParam}`);
-      const data = await res.json();
-      if (!data.ok || !Array.isArray(data.result)) return;
-
-      for (const upd of data.result) {
-        if (upd.update_id <= db.lastUpdateId || db.processedUpdates.has(upd.update_id)) {
-          continue;
-        }
-        db.processedUpdates.add(upd.update_id);
-        db.lastUpdateId = upd.update_id;
-        saveDb();
-
-        // 1. Обработка текстового сообщения с ником в боте
-        if (upd.message && upd.message.text) {
-          const chatId = String(upd.message.chat.id);
-          const rawText = upd.message.text.trim();
-
-          if (rawText === '/start') {
-            const already = db.personToNick[chatId];
-            if (already) {
-              await sendBotMessage(chatId, `📡 DRONEPOINT AREX PRO SHOP\n\nВы уже зарегистрированы под ником: <b>${already}</b>.\nПовторная регистрация невозможна (1 человек = 1 аккаунт).`);
-            } else {
-              await sendBotMessage(chatId, `📡 Добро пожаловать в <b>DRONEPOINT AREX PRO SHOP</b>!\n\nОтправьте мне ваш желаемый <b>ник</b> одним сообщением.\n⚠️ Внимание: зарегистрироваться можно только <b>1 раз</b>!`);
-            }
-            continue;
-          }
-
-          if (rawText.startsWith('/')) continue;
-
-          const cleanNick = rawText.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄ0-9_-]/g, '').slice(0, 20);
-          if (cleanNick.length < 2) {
-            await sendBotMessage(chatId, '❌ Ник должен содержать минимум 2 символа (буквы или цифры).');
-            continue;
-          }
-
-          const normNick = cleanNick.toLowerCase();
-
-          // ПРОВЕРКА 1: Регистрировался ли этот человек (chatId) ранее?
-          if (db.personToNick[chatId]) {
-            const oldNick = db.personToNick[chatId];
-            await sendBotMessage(chatId, `⛔ <b>Регистрация отклонена!</b>\nОдин человек может зарегистрироваться только <b>1 раз</b>.\nВаш единственный закреплённый ник: <b>${oldNick}</b>.`);
-            continue;
-          }
-
-          // ПРОВЕРКА 2: Не занят ли этот ник другим человеком?
-          if (db.nickToUser[normNick] && db.nickToUser[normNick].chatId !== chatId) {
-            await sendBotMessage(chatId, `❌ Ник <b>${cleanNick}</b> уже занят другим пользователем. Придумайте другой ник.`);
-            continue;
-          }
-
-          // Регистрируем раз и навсегда
-          db.nickToUser[normNick] = { chatId, personId: chatId, nick: cleanNick };
-          db.personToNick[chatId] = cleanNick;
-          saveDb();
-
-          await sendBotMessage(chatId, `✅ Ник <b>${cleanNick}</b> успешно зарегистрирован и закреплён за вами навсегда!\n\nТеперь введите его на сайте и нажмите «📨 Выслать вход в ТГ».`);
-        }
-
-        // 2. Обработка нажатия кнопок «Да» / «Нет»
-        if (upd.callback_query) {
-          const cb = upd.callback_query;
-          const cbData = cb.data || '';
-          const chatId = String(cb.message?.chat?.id || cb.from.id);
-
-          await fetch(`${API_BASE}/answerCallbackQuery`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ callback_query_id: cb.id })
-          });
-
-          if (cbData.startsWith('login_yes:')) {
-            const nick = cbData.split(':')[1];
-            await sendBotMessage(chatId, `✅ Вход в аккаунт <b>${nick}</b> подтверждён!`);
-            if (!pendingLoginNick || pendingLoginNick.toLowerCase() === nick.toLowerCase()) {
-              completeLogin(nick, chatId);
-            }
-          } else if (cbData.startsWith('login_no:')) {
-            const nick = cbData.split(':')[1];
-            await sendBotMessage(chatId, `🚫 Вход в аккаунт <b>${nick}</b> отклонён.`);
-            pendingLoginNick = '';
-            setAuthStatus('🚫 Вход отклонён пользователем в Telegram!', 'err');
-          }
-        }
-      }
-    } catch (e) {
-    } finally {
-      isPolling = false;
-    }
-  }
-
-  async function sendBotMessage(chatId, htmlText, replyMarkup = null) {
-    const payload = {
-      chat_id: chatId,
-      text: htmlText,
-      parse_mode: 'HTML'
-    };
-    if (replyMarkup) payload.reply_markup = replyMarkup;
-
-    await fetch(`${API_BASE}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-  }
-
-  // Кнопка 1: Проверить ник
-  async function checkNickBtn() {
-    await pollBotUpdates();
-    const raw = document.getElementById('nickInput').value.trim();
-    if (!raw) return setAuthStatus('❌ Введите ник для проверки.', 'err');
-
-    const norm = raw.toLowerCase();
-    const record = db.nickToUser[norm];
-    const myRegisteredNick = db.personToNick[CURRENT_PERSON_ID];
-
-    if (record) {
-      if (myRegisteredNick && myRegisteredNick.toLowerCase() !== norm) {
-        return setAuthStatus(`⛔ Ник «${record.nick}» принадлежит другому аккаунту. Ваш единственный ник: «${myRegisteredNick}».`, 'err');
-      }
-      setAuthStatus(`✅ Ник «${record.nick}» найден в базе! Нажмите «📨 Выслать вход в ТГ» для подтверждения.`, 'ok');
-    } else {
-      if (myRegisteredNick) {
-        setAuthStatus(`⛔ Вы уже зарегистрированы под ником «${myRegisteredNick}». Создать второй ник нельзя!`, 'err');
-      } else {
-        setAuthStatus(`ℹ Ник «${raw}» свободен! Отправьте его боту или нажмите «⚡ Зарегистрировать» (1 раз).`, '');
-      }
-    }
-  }
-
-  // Кнопка 2: Прямая регистрация (строго 1 раз на человека)
-  function registerOnceBtn() {
-    const raw = document.getElementById('nickInput').value.trim();
-    const cleanNick = raw.replace(/[^a-zA-Zа-яА-ЯёЁіІїЇєЄ0-9_-]/g, '').slice(0, 20);
-    if (cleanNick.length < 2) {
-      return setAuthStatus('❌ Введите корректный ник (от 2 символов).', 'err');
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
     }
 
-    // ЖЁСТКАЯ ПРОВЕРКА: 1 человек = 1 раз
-    const alreadyNick = db.personToNick[CURRENT_PERSON_ID];
-    if (alreadyNick) {
-      document.getElementById('nickInput').value = alreadyNick;
-      return setAuthStatus(`⛔ Ошибка: один человек может зарегистрироваться только 1 раз! Ваш закреплённый ник: «${alreadyNick}».`, 'err');
+    const tgUser = tg?.initDataUnsafe?.user || null;
+    const USER_ID = tgUser ? String(tgUser.id) : localStorage.getItem("dp_fallback_uid") || ("guest_" + Math.floor(Math.random() * 1000000));
+    localStorage.setItem("dp_fallback_uid", USER_ID);
+
+    let pollTimer = null;
+    let coins = Number(localStorage.getItem("dp_coins") || 0);
+    let energy = Number(localStorage.getItem("dp_energy") || 100);
+    let power = 1;
+
+    function setStatus(text, type = "pending") {
+      const box = document.getElementById("authStatus");
+      box.className = "status-box show status-" + type;
+      box.innerHTML = text;
     }
 
-    const norm = cleanNick.toLowerCase();
-    if (db.nickToUser[norm]) {
-      return setAuthStatus(`❌ Ник «${cleanNick}» уже занят. Выберите другой ник.`, 'err');
-    }
-
-    const tgChatId = tgUser?.id ? String(tgUser.id) : '';
-    db.nickToUser[norm] = { chatId: tgChatId, personId: CURRENT_PERSON_ID, nick: cleanNick };
-    db.personToNick[CURRENT_PERSON_ID] = cleanNick;
-    if (tgChatId) db.personToNick[tgChatId] = cleanNick;
-    saveDb();
-
-    const regBtn = document.getElementById('regOnceBtn');
-    regBtn.className = 'btn btn-disabled';
-    regBtn.innerText = '🔒 Уже зареган';
-
-    setAuthStatus(`✅ Ник «${cleanNick}» зарегистрирован за вами (1/1)! Теперь нажмите «📨 Выслать вход в ТГ».`, 'ok');
-  }
-
-  // Кнопка 3: Выслать вход в ТГ
-  async function sendLoginRequestBtn() {
-    await pollBotUpdates();
-    const raw = document.getElementById('nickInput').value.trim();
-    if (!raw) return setAuthStatus('❌ Введите ваш зарегистрированный ник!', 'err');
-
-    const norm = raw.toLowerCase();
-    const record = db.nickToUser[norm];
-    const myRegisteredNick = db.personToNick[CURRENT_PERSON_ID];
-
-    if (!record) {
-      return setAuthStatus(`❌ Ник «${raw}» не найден. Сначала зарегистрируйтесь (1 раз) в боте или кнопкой выше.`, 'err');
-    }
-
-    if (myRegisteredNick && myRegisteredNick.toLowerCase() !== norm) {
-      return setAuthStatus(`⛔ Доступ запрещён! За вами закреплён только ник «${myRegisteredNick}».`, 'err');
-    }
-
-    // Если привязан Telegram chatId — шлём запрос с кнопками Да / Нет
-    if (record.chatId) {
-      pendingLoginNick = record.nick;
-      setAuthStatus(`📨 Запрос отправлен в Telegram для «${record.nick}». Нажмите «✅ Да» в боте...`, 'ok');
+    async function handleResetCommand() {
+      localStorage.removeItem("dp_registered_nick");
+      localStorage.removeItem("dp_logged_in_nick");
+      document.getElementById("nickInput").value = "";
       try {
-        await sendBotMessage(
-          record.chatId,
-          `🔐 <b>Это вы заходите в акк</b> <code>${record.nick}</code> (DRONEPOINT AREX PRO SHOP)?`,
-          {
-            inline_keyboard: [[
-              { text: '✅ Да', callback_data: `login_yes:${record.nick}` },
-              { text: '❌ Нет', callback_data: `login_no:${record.nick}` }
-            ]]
-          }
-        );
+        await fetch(`${API_URL}/api/reset-nick`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: USER_ID })
+        });
+      } catch (e) {}
+      setStatus("♻️ Команда <b>/resetник</b> выполнена: лимит «1 регистрация на человека» сброшен!", "ok");
+    }
+
+    async function checkNick() {
+      const nick = document.getElementById("nickInput").value.trim();
+      if (nick.toLowerCase() === "/resetник") return handleResetCommand();
+      if (!nick) return setStatus("Введите ник для проверки.", "err");
+
+      setStatus("⏳ Проверка ника через @DRONEPOINT_AREX_PRO_REGISTR_BOT...", "pending");
+      try {
+        const res = await fetch(`${API_URL}/api/check-nick`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: USER_ID, nickname: nick })
+        });
+        const data = await res.json();
+        if (!data.available) {
+          setStatus(`❌ Ник <b>${nick}</b> уже занят другим пользователем.`, "err");
+        } else if (data.existing_nick && data.existing_nick.toLowerCase() !== nick.toLowerCase()) {
+          setStatus(`⚠️ Лимит: за вами уже закреплён ник <b>${data.existing_nick}</b>. Используйте <code>/resetник</code> для сброса.`, "err");
+        } else {
+          setStatus(`✅ Ник <b>${nick}</b> свободен! Нажмите «Зарегистрировать» или «📨 Выслать вход в ТГ».`, "ok");
+        }
       } catch (e) {
-        setAuthStatus('⚠ Не удалось отправить сообщение в Telegram. Проверьте интернет или откройте бота.', 'err');
+        setStatus("⚠️ Нет связи с сервером бота. Проверьте адрес API_URL в коде.", "err");
       }
-    } else {
-      // Локальный профиль без привязанного chatId (если открыто в обычном браузере без ТГ)
-      completeLogin(record.nick, CURRENT_PERSON_ID);
-    }
-  }
-
-  function completeLogin(nick, personId) {
-    state.loggedNick = nick;
-    db.personToNick[CURRENT_PERSON_ID] = nick;
-    if (personId) db.personToNick[personId] = nick;
-    saveDb();
-    saveState();
-    openMainTerminal();
-  }
-
-  function logoutSession() {
-    state.loggedNick = '';
-    saveState();
-    openAuthScreen();
-  }
-
-  // === 4. ОТКРЫТИЕ ОСНОВНОГО МЕНЮ ===
-  function openMainTerminal() {
-    document.getElementById('authScreen').style.display = 'none';
-    document.getElementById('tutorialScreen').style.display = 'none';
-    document.getElementById('mainApp').style.display = 'block';
-    document.getElementById('bottomNav').style.display = 'flex';
-    document.getElementById('catWidget').style.display = 'flex';
-
-    document.getElementById('userName').innerText = state.loggedNick || 'Боец';
-    document.getElementById('userHandle').innerText = `ID: ${CURRENT_PERSON_ID} • Аккаунт 1/1`;
-    document.getElementById('accountLockInfo').innerText =
-      `За вами навсегда закреплён ник: «${state.loggedNick}». Повторная регистрация другого ника заблокирована.`;
-
-    updateUI();
-  }
-
-  function updateUI() {
-    document.getElementById('coinsDisplay').innerText = `${state.coins.toLocaleString('ru-RU')} 🪙`;
-    document.getElementById('powerDisplay').innerText = `${state.power} / ${state.maxPower} ⚡`;
-    document.getElementById('tapInfo').innerText = `+${state.tapPower} 🪙 / -1 ⚡`;
-    document.getElementById('goalText').innerText = `${state.coins.toLocaleString('ru-RU')} / 100 000 🪙`;
-    document.getElementById('powerLvl').innerText = state.powerLvl;
-    document.getElementById('powerCost').innerText = state.powerLvl * 500;
-    document.getElementById('tapLvl').innerText = state.tapPower;
-    document.getElementById('tapCost').innerText = state.tapPower * 1000;
-
-    if (state.vip) {
-      document.getElementById('vipBadge').innerText = '👑 VIP AREX PRO';
     }
 
-    const keysBox = document.getElementById('keysContainer');
-    if (state.keys.length > 0) {
-      keysBox.innerHTML = state.keys.map(k => `<div style="color:var(--accent); font-weight:700; margin-bottom:4px;">🔑 ${k}</div>`).join('');
-    }
-  }
+    async function registerNick() {
+      const nick = document.getElementById("nickInput").value.trim();
+      if (nick.toLowerCase() === "/resetник") return handleResetCommand();
+      if (!nick) return setStatus("Введите ник для регистрации.", "err");
 
-  // === КОТИК, ЗВУК МЯУ И ПЕРЕКЛЮЧЕНИЕ КНОПКИ ПІДТРИМАТИ КАНАЛ ===
-  let meowAudio = null;
-  try {
-    meowAudio = new Audio(MEOW_AUDIO_FILE);
-    meowAudio.preload = 'auto';
-  } catch (e) {}
+      const localReg = localStorage.getItem("dp_registered_nick");
+      if (localReg && localReg.toLowerCase() !== nick.toLowerCase()) {
+        return setStatus(`⛔ Действует правило: <b>1 регистрация на человека</b> (ваш ник: <b>${localReg}</b>). Введите <code>/resetник</code> для сброса.`, "err");
+      }
 
-  function playSynthMeow() {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    const now = ctx.currentTime;
-
-    const osc = ctx.createOscillator();
-    const filter = ctx.createBiquadFilter();
-    const gain = ctx.createGain();
-
-    osc.type = 'sawtooth';
-    osc.frequency.setValueAtTime(390, now);
-    osc.frequency.exponentialRampToValueAtTime(740, now + 0.17);
-    osc.frequency.exponentialRampToValueAtTime(310, now + 0.62);
-
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(920, now);
-    filter.Q.setValueAtTime(3.5, now);
-
-    gain.gain.setValueAtTime(0.001, now);
-    gain.gain.linearRampToValueAtTime(0.32, now + 0.08);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
-
-    osc.connect(filter);
-    filter.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(now);
-    osc.stop(now + 0.66);
-  }
-
-  function petCat() {
-    // Звук мяу (MP3 пользователя + резервный синтезатор)
-    if (meowAudio) {
-      meowAudio.currentTime = 0;
-      meowAudio.play().catch(() => playSynthMeow());
-    } else {
-      playSynthMeow();
+      setStatus("⏳ Регистрация ника...", "pending");
+      try {
+        const res = await fetch(`${API_URL}/api/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: USER_ID, nickname: nick })
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          return setStatus(`❌ ${data.error}`, "err");
+        }
+        localStorage.setItem("dp_registered_nick", nick);
+        setStatus(`✅ Ник <b>${nick}</b> успешно зарегистрирован! Теперь нажмите <b>«📨 Выслать вход в ТГ»</b>.`, "ok");
+      } catch (e) {
+        localStorage.setItem("dp_registered_nick", nick);
+        setStatus(`✅ Ник <b>${nick}</b> сохранён локально. Подключите сервер бота для отправки запроса в ТГ.`, "ok");
+      }
     }
 
-    const cat = document.getElementById('radarCat');
-    const bubble = document.getElementById('meowBubble');
-    const supportBtn = document.getElementById('supportChannelBtn');
+    async function sendLoginToBot() {
+      const nick = document.getElementById("nickInput").value.trim();
+      if (nick.toLowerCase() === "/resetник") return handleResetCommand();
+      if (!nick) return setStatus("Введите ваш ник перед отправкой запроса.", "err");
 
-    cat.classList.remove('meow-jump');
-    void cat.offsetWidth;
-    cat.classList.add('meow-jump');
+      if (!tgUser) {
+        return setStatus("⚠️ Откройте это приложение внутри Telegram через бота <b>@DRONEPOINT_AREX_PRO_REGISTR_BOT</b>, чтобы бот знал ваш ID и мог прислать вопрос в личку.", "err");
+      }
 
-    bubble.classList.add('show');
-    setTimeout(() => bubble.classList.remove('show'), 1300);
+      setStatus("📨 Отправляем запрос в <b>@DRONEPOINT_AREX_PRO_REGISTR_BOT</b>...", "pending");
 
-    // 1-е нажатие -> показать кнопку, 2-е нажатие -> убрать кнопку
-    supportBtn.classList.toggle('visible');
-  }
+      try {
+        const res = await fetch(`${API_URL}/api/request-login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user_id: tgUser.id, nickname: nick })
+        });
+        const data = await res.json();
 
-  // === КЛИКЕР, МАГАЗИН И КЛЮЧИ ===
-  function handleTap() {
-    if (state.power > 0) {
-      state.power--;
-      state.coins += state.tapPower;
-    } else {
-      state.coins = Math.max(0, state.coins - 2);
+        if (!data.ok) {
+          return setStatus(`❌ ${data.error}`, "err");
+        }
+
+        setStatus(
+          `📩 Бот <b>@DRONEPOINT_AREX_PRO_REGISTR_BOT</b> отправил вам сообщение в личку:<br>` +
+          `<i>«Это вы пытаетесь зайти в аккаунт?» (✅ Да / ❌ Нет)</i><br><br>` +
+          `⏳ Ожидаем вашего нажатия <b>«✅ Да»</b> в Telegram...`,
+          "pending"
+        );
+
+        startPollingLogin(tgUser.id, nick);
+      } catch (e) {
+        setStatus("⚠️ Ошибка соединения с сервером бота. Убедитесь, что <code>bot_registr.py</code> запущен и указан в <code>API_URL</code>.", "err");
+      }
     }
-    saveState();
-  }
 
-  function buyMaxPower() {
-    const cost = state.powerLvl * 500;
-    if (state.coins < cost) return alert('Недостаточно монет!');
-    state.coins -= cost;
-    state.powerLvl++;
-    state.maxPower += 25;
-    state.power = state.maxPower;
-    saveState();
-  }
+    function startPollingLogin(userId, nick) {
+      if (pollTimer) clearInterval(pollTimer);
+      pollTimer = setInterval(async () => {
+        try {
+          const res = await fetch(`${API_URL}/api/check-login?user_id=${userId}`);
+          const data = await res.json();
 
-  function buyTapPower() {
-    const cost = state.tapPower * 1000;
-    if (state.coins < cost) return alert('Недостаточно монет!');
-    state.coins -= cost;
-    state.tapPower++;
-    saveState();
-  }
-
-  function claimFreeKey() {
-    if (state.coins < 100000) return alert('Нужно 100 000 монет!');
-    state.coins -= 100000;
-    const key = 'AREX-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-    state.keys.push(key);
-    state.vip = true;
-    saveState();
-    alert('Ключ получен: ' + key);
-  }
-
-  function activateAdminCode() {
-    const code = document.getElementById('adminCodeInput').value.trim().toUpperCase();
-    if (!code) return;
-    state.keys.push(code);
-    state.vip = true;
-    document.getElementById('adminCodeInput').value = '';
-    saveState();
-    alert('Код активирован!');
-  }
-
-  function activatePromo() {
-    const code = document.getElementById('promoInput').value.trim().toUpperCase();
-    if (!code) return;
-    state.keys.push(code);
-    state.vip = true;
-    document.getElementById('promoInput').value = '';
-    saveState();
-    alert('Ключ активирован!');
-  }
-
-  function switchTab(tabName, btn) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + tabName).classList.add('active');
-    btn.classList.add('active');
-  }
-
-  function openPay(name, price) {
-    document.getElementById('payItemName').innerText = name;
-    document.getElementById('payItemPrice').innerText = price + ' грн';
-    document.getElementById('payModal').style.display = 'flex';
-  }
-
-  function closePay() {
-    document.getElementById('payModal').style.display = 'none';
-  }
-
-  function confirmOrder() {
-    closePay();
-    alert('Чек отправлен администратору @eldar3275! Ожидайте выдачи ключа.');
-  }
-
-  function copyText(txt) {
-    try { navigator.clipboard?.writeText(txt.replace(' 📋', '')); } catch (e) {}
-    alert('Скопировано!');
-  }
-
-  // Восстановление силы (+1 каждые 5 минут)
-  setInterval(() => {
-    if (state.power < state.maxPower) {
-      state.power++;
-      saveState();
+          if (data.status === "approved") {
+            clearInterval(pollTimer);
+            localStorage.setItem("dp_logged_in_nick", nick);
+            enterTerminal(nick);
+          } else if (data.status === "denied") {
+            clearInterval(pollTimer);
+            setStatus("❌ Вы нажали <b>«❌ Нет»</b> в Telegram. Вход отклонён.", "err");
+          }
+        } catch (e) {}
+      }, 2000);
     }
-  }, 300000);
 
-  // Старт 5-секундной загрузки
-  runBootLoader();
-</script>
+    function enterTerminal(nick) {
+      document.getElementById("authScreen").classList.add("hidden");
+      document.getElementById("mainScreen").classList.remove("hidden");
+      document.getElementById("activeNickDisplay").textContent = nick;
+      updateStats();
+    }
+
+    function logout() {
+      localStorage.removeItem("dp_logged_in_nick");
+      document.getElementById("mainScreen").classList.add("hidden");
+      document.getElementById("authScreen").classList.remove("hidden");
+      setStatus("Вы вышли из аккаунта.", "pending");
+    }
+
+    function switchTab(tabName, el) {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      el.classList.add("active");
+      ["clicker", "shop", "keys"].forEach(id => {
+        document.getElementById("tab-" + id).classList.toggle("hidden", id !== tabName);
+      });
+    }
+
+    function tapDrone() {
+      if (energy <= 0) return;
+      coins += power;
+      energy -= 1;
+      localStorage.setItem("dp_coins", coins);
+      localStorage.setItem("dp_energy", energy);
+      updateStats();
+    }
+
+    function updateStats() {
+      document.getElementById("coinsVal").textContent = coins;
+      document.getElementById("energyVal").textContent = `${energy}/100`;
+      document.getElementById("powerVal").textContent = `+${power}`;
+    }
+
+    function openPay(item, price) {
+      const box = document.getElementById("payBox");
+      box.className = "status-box show status-pending";
+      box.innerHTML = `💳 Оплата: <b>${item} (${price})</b><br>Карта: <code>4441 1144 3394 8724</code><br>После оплаты отправьте чек в <b>@dronpint_arex_pro_Shop_bot</b>.`;
+    }
+
+    async function runServiceCmd() {
+      const cmd = document.getElementById("serviceCmdInput").value.trim().toLowerCase();
+      if (cmd === "/resetник") {
+        await handleResetCommand();
+        logout();
+      }
+    }
+
+    // Автоматический вход, если сессия уже подтверждена в боте
+    const savedNick = localStorage.getItem("dp_logged_in_nick");
+    if (savedNick) {
+      enterTerminal(savedNick);
+    }
+  </script>
 </body>
 </html>
